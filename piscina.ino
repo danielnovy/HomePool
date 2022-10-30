@@ -5,6 +5,7 @@
 #include "Setup.h"
 #include "Status.h"
 #include "MyLCD.h"
+#include "Button.h"
 
 // Conexoes:
 // Modulo 4 reles: d7, d6, d5 e tx
@@ -31,6 +32,7 @@
 
 Config *myConfig = new Config();
 MyLCD  *mylcd    = new MyLCD();
+Button *button   = new Button(BUTTON_PIN);
 struct Status currStatus;
 
 bool runBordaWithPool = true;
@@ -52,15 +54,12 @@ bool shouldReadPoolTemp = true; // if true, pool temp is read. Otherwise, roof t
 WiFiServer server(80);
 
 void setup() {
-  
   //myConfig->saveTest();
   myConfig->load();
-  
   setupAll();
-
   mylcd = new MyLCD();
-
   server.begin();
+  button->begin();
 }
 
 void loop() {
@@ -74,7 +73,7 @@ void loop() {
 }
 
 void checkButtonPressed() {
-  if (pressed(BUTTON_PIN)) {
+  if (button->isPressed()) {
     if (mylcd->isBacklightOn) {
       if (currStatus.poolEngineRunning) {
         stopPoolEngine();
@@ -325,17 +324,6 @@ void stopBordaEngine() {
 ///// UTILS /////////////////////////
 /////////////////////////////////////
 
-long lastPressed = 0;
-bool pressed(int pin) {
-  long inow = millis();
-  if (inow - lastPressed > 500L) {
-    if (digitalRead(pin) == LOW) {
-      lastPressed = inow;
-      return true;
-    }
-  }
-  return false;
-}
 
 String buildResponsePage(
     float roofTemperature,

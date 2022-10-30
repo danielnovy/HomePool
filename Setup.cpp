@@ -11,8 +11,6 @@ void setupDevices() {
   pinMode(SENSOR_SWITCH,    OUTPUT); // rele 4 - Switch do sensor de temperatura
 
   pinMode(A0, INPUT); // Sensor de temperatura
-
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
   
   // Desliga todos os reles (sim, high eh para desligar :)
   digitalWrite(HOT_ENGINE_PIN,   HIGH);
