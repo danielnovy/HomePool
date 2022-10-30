@@ -4,16 +4,19 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-struct Config {
-  byte hotEngineTempDiff;
-  byte hotEngineSecondsToRun;
-
-  byte poolEngineStartHour;
-  byte poolEngineStartMinute;
-  byte poolEngineMinutesToRun;
+class Config {
+  public:
+    byte hotEngineTempDiff;
+    byte hotEngineSecondsToRun;
+    byte poolEngineStartHour;
+    byte poolEngineStartMinute;
+    byte poolEngineMinutesToRun;
+    
+    Config();
+    void load();
+    void save();
+    void saveTest();
 };
 
-struct Config loadConfig();
-void saveConfig(Config);
 
 #endif

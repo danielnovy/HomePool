@@ -38,7 +38,7 @@ LiquidCrystal_I2C lcd(0x3F,16,2);  // set the LCD address to 0x3F for a 16 chars
 // No meu caso, D1 e D2 jah foram pro saco por causa do display. Vou usar RX para um INPUT e TX para um OUTPUT.
 // Faltam 2 INPUTs e 3 OUTPUTs.
 
-struct Config myConfig;
+Config *myConfig = new Config();
 
 bool hotEngineRunning   = false;
 bool poolEngineRunning  = false;
@@ -149,7 +149,7 @@ void setupOTA() {
 void setup() {
   
   //saveTestConfig();
-  myConfig = loadConfig();
+  myConfig->load();
   setupDevices();
   setupWiFi();
   setupOTA();
@@ -248,11 +248,11 @@ void webServerLoop() {
             webClient.print(buildResponsePage(
               roofTemp,
               poolTemp,
-              myConfig.hotEngineTempDiff,
-              myConfig.hotEngineSecondsToRun,
-              myConfig.poolEngineStartHour,
-              myConfig.poolEngineStartMinute,
-              myConfig.poolEngineMinutesToRun,
+              myConfig->hotEngineTempDiff,
+              myConfig->hotEngineSecondsToRun,
+              myConfig->poolEngineStartHour,
+              myConfig->poolEngineStartMinute,
+              myConfig->poolEngineMinutesToRun,
               poolEngineRunning,
               bordaEngineRunning,
               hotEngineRunning
@@ -292,12 +292,12 @@ void hotEngineLoop() {
   
   if (!hotEngineRunning) {
 #ifdef MODE_ONLY_ROOF_TEMP
-    // here, myConfig.hotEngineTempDiff = min roof temp to activate engine
-    if (roofTemp >= myConfig.hotEngineTempDiff) {
+    // here, myConfig->hotEngineTempDiff = min roof temp to activate engine
+    if (roofTemp >= myConfig->hotEngineTempDiff) {
       startHotEngine();
     }
 #else
-    if ((roofTemp - poolTemp) > myConfig.hotEngineTempDiff) {
+    if ((roofTemp - poolTemp) > myConfig->hotEngineTempDiff) {
       startHotEngine();
     }
 #endif
@@ -385,7 +385,7 @@ void stopHotEngine() {
 bool checkStopHotEngine() {
   long inow = now();
   long diff = inow - hotEngineStartTime;
-  if (diff > myConfig.hotEngineSecondsToRun) {
+  if (diff > myConfig->hotEngineSecondsToRun) {
     return true;
   }
   return false;
@@ -435,15 +435,15 @@ void stopPoolEngine() {
 }
 
 bool checkStartPoolEngine() {
-  bool matchHour = DateTime.format("%H").toInt() == myConfig.poolEngineStartHour;
-  bool matchMin  = DateTime.format("%M").toInt() == myConfig.poolEngineStartMinute;
+  bool matchHour = DateTime.format("%H").toInt() == myConfig->poolEngineStartHour;
+  bool matchMin  = DateTime.format("%M").toInt() == myConfig->poolEngineStartMinute;
   return matchHour && matchMin;
 }
 
 bool checkStopPoolEngine() {
   long inow = now();
   long diff = inow - poolEngineStartTime;
-  if (diff > (myConfig.poolEngineMinutesToRun * 60L)) { 
+  if (diff > (myConfig->poolEngineMinutesToRun * 60L)) { 
     return true;
   }
   return false;
@@ -559,36 +559,36 @@ void webCommand(String command) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
-    myConfig.hotEngineTempDiff = value;
-    saveConfig(myConfig);
+    myConfig->hotEngineTempDiff = value;
+    myConfig->save();
   } else 
   if (command.startsWith("GET /hotEngineSecondsToRun")) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
-    myConfig.hotEngineSecondsToRun = value;
-    saveConfig(myConfig);
+    myConfig->hotEngineSecondsToRun = value;
+    myConfig->save();
   } else 
   if (command.startsWith("GET /poolEngineStartHour")) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
-    myConfig.poolEngineStartHour = value;
-    saveConfig(myConfig);
+    myConfig->poolEngineStartHour = value;
+    myConfig->save();
   } else 
   if (command.startsWith("GET /poolEngineStartMinute")) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
-    myConfig.poolEngineStartMinute = value;
-    saveConfig(myConfig);
+    myConfig->poolEngineStartMinute = value;
+    myConfig->save();
   } else 
   if (command.startsWith("GET /poolEngineMinutesToRun")) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
-    myConfig.poolEngineMinutesToRun = value;
-    saveConfig(myConfig);
+    myConfig->poolEngineMinutesToRun = value;
+    myConfig->save();
   } else
   
   if (command.startsWith("GET /poolEngineOff")) {

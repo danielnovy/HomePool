@@ -4,46 +4,47 @@
 
 #include "Config.h"
 
-struct Config loadConfig() {
-  struct Config result;
-  EEPROM.begin(512);
-  int addr = 0;
-  result.hotEngineTempDiff = EEPROM.read(addr++);
-  result.hotEngineSecondsToRun = EEPROM.read(addr++);
-  result.poolEngineStartHour = EEPROM.read(addr++);
-  result.poolEngineStartMinute = EEPROM.read(addr++);
-  result.poolEngineMinutesToRun = EEPROM.read(addr++);
-
-  return result;
+Config::Config() {
+  
 }
 
-void saveConfig(struct Config myConfig) {
+void Config::load() {
+  EEPROM.begin(512);
   int addr = 0;
-  EEPROM.write(addr++, myConfig.hotEngineTempDiff);
-  EEPROM.write(addr++, myConfig.hotEngineSecondsToRun);
-  EEPROM.write(addr++, myConfig.poolEngineStartHour);
-  EEPROM.write(addr++, myConfig.poolEngineStartMinute);
-  EEPROM.write(addr++, myConfig.poolEngineMinutesToRun);
+  this->hotEngineTempDiff = EEPROM.read(addr++);
+  this->hotEngineSecondsToRun = EEPROM.read(addr++);
+  this->poolEngineStartHour = EEPROM.read(addr++);
+  this->poolEngineStartMinute = EEPROM.read(addr++);
+  this->poolEngineMinutesToRun = EEPROM.read(addr++);
+}
+
+void Config::save() {
+  int addr = 0;
+  EEPROM.write(addr++, this->hotEngineTempDiff);
+  EEPROM.write(addr++, this->hotEngineSecondsToRun);
+  EEPROM.write(addr++, this->poolEngineStartHour);
+  EEPROM.write(addr++, this->poolEngineStartMinute);
+  EEPROM.write(addr++, this->poolEngineMinutesToRun);
   EEPROM.commit();
 }
 
-void saveTestConfig(struct Config myConfig) {
+void Config::saveTest() {
   
   EEPROM.begin(512);
 
-  myConfig.hotEngineTempDiff = 10;
-  myConfig.hotEngineSecondsToRun = 10;
-  myConfig.poolEngineStartHour = 7;
-  myConfig.poolEngineStartMinute = 0;
-  myConfig.poolEngineMinutesToRun = 1;
+  this->hotEngineTempDiff = 10;
+  this->hotEngineSecondsToRun = 10;
+  this->poolEngineStartHour = 7;
+  this->poolEngineStartMinute = 0;
+  this->poolEngineMinutesToRun = 1;
 
-  saveConfig(myConfig);
+  this->save();
 
-  myConfig.hotEngineTempDiff = 0;
-  myConfig.hotEngineSecondsToRun = 0;
-  myConfig.poolEngineStartHour = 0;
-  myConfig.poolEngineStartMinute = 0;
-  myConfig.poolEngineMinutesToRun = 0;
+  this->hotEngineTempDiff = 0;
+  this->hotEngineSecondsToRun = 0;
+  this->poolEngineStartHour = 0;
+  this->poolEngineStartMinute = 0;
+  this->poolEngineMinutesToRun = 0;
 }
 
 
