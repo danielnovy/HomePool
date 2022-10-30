@@ -1,11 +1,10 @@
-#include <LiquidCrystal_I2C.h>
 #include <ESP8266WiFi.h>
-#include <ArduinoOTA.h>
-#include <ESPDateTime.h>
-#include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
 
 #include "Config.h"
+#include "Setup.h"
+#include "Status.h"
+#include "MyLCD.h"
 
 // Conexoes:
 // Modulo 4 reles: d7, d6, d5 e tx
@@ -14,14 +13,6 @@
 // Thermistor: a0 e gnd
 // Resistor 10k: 3.3v -> a0
 
-LiquidCrystal_I2C lcd(0x3F,16,2);  // set the LCD address to 0x3F for a 16 chars and 2 line display
-
-
-#define HOT_ENGINE_PIN   D6
-#define POOL_ENGINE_PIN  D7
-#define BORDA_ENGINE_PIN D5
-#define SENSOR_SWITCH    1 // TX
-#define BUTTON_PIN       3 // RX
 
 // PLACA WeMos D1 R1 ESP8266
 // Pinos que posso usar como INPUT D5, D6, D7 (d8 nao, d4 nao, d3 nao, d2 nao, d1 inteferiu na saida serial!, d0 nao)
@@ -39,12 +30,10 @@ LiquidCrystal_I2C lcd(0x3F,16,2);  // set the LCD address to 0x3F for a 16 chars
 // Faltam 2 INPUTs e 3 OUTPUTs.
 
 Config *myConfig = new Config();
+MyLCD  *mylcd    = new MyLCD();
+struct Status currStatus;
 
-bool hotEngineRunning   = false;
-bool poolEngineRunning  = false;
-bool bordaEngineRunning = false;
-
-bool runBordaWithPool = false;
+bool runBordaWithPool = true;
 
 long hotEngineStartTime;
 long poolEngineStartTime;
@@ -53,112 +42,25 @@ long lastHotEngineLoop  = 0;
 long lastHotEngineStart = 0;
 long lastPoolEngineLoop = 0;
 
-long lastLcdBacklight = DateTime.now();
-int BACKLIGHT_TIMER = 20;
-bool isBacklightOn = true;
-
-float roofTemp;
-float poolTemp;
 float avgRead;
-int areadPool;
-int areadRoof;
+
 int httpCode = 0;
 
 bool infoChanged = true;
 bool shouldReadPoolTemp = true; // if true, pool temp is read. Otherwise, roof temp is read.
 
-const char* ssid = "Deco";
-const char* password = "mobile2008";
 WiFiServer server(80);
-
-bool setupWiFi() {
-    // Connect to WiFi network
-  Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
- 
-  WiFi.begin(ssid, password);
- 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
- 
-  // Start the server
-  server.begin();
-  Serial.println("Server started");
- 
-  // Print the IP address
-  Serial.print("Use this URL : ");
-  Serial.print("http://");
-  Serial.print(WiFi.localIP());
-  Serial.println("/");
-  return true;
-}
-
-bool setupDevices() {
-
-  lcd.init();
-  lcd.backlight();
-
-  pinMode(HOT_ENGINE_PIN,   OUTPUT); // rele 1 - Aquecedor
-  pinMode(POOL_ENGINE_PIN,  OUTPUT); // rele 2 - Bomba do Filtro
-  pinMode(BORDA_ENGINE_PIN, OUTPUT); // rele 3 - Borda Infinita
-  pinMode(SENSOR_SWITCH,    OUTPUT); // rele 4 - Switch do sensor de temperatura
-
-  pinMode(A0, INPUT); // Sensor de temperatura
-
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  
-  // Desliga todos os reles (sim, high eh para desligar :)
-  digitalWrite(HOT_ENGINE_PIN,   HIGH);
-  digitalWrite(POOL_ENGINE_PIN,  HIGH);
-  digitalWrite(BORDA_ENGINE_PIN, HIGH);
-  digitalWrite(SENSOR_SWITCH,    LOW); // comeca lendo temp da piscina
-
-  return true;
-}
-
-void setupOTA() {
-  ArduinoOTA.onStart([]() {
-    Serial.println("Inicio...");
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("nFim!");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progresso: %u%%r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Erro [%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Autenticacao Falhou");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Falha no Inicio");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Falha na Conexao");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Falha na Recepcao");
-    else if (error == OTA_END_ERROR) Serial.println("Falha no Fim");
-  });
-  ArduinoOTA.begin();
-  Serial.println("Pronto");
-  Serial.print("Endereco IP: ");
-  Serial.println(WiFi.localIP());
-}
 
 void setup() {
   
-  //saveTestConfig();
+  //myConfig->saveTest();
   myConfig->load();
-  setupDevices();
-  setupWiFi();
-  setupOTA();
+  
+  setupAll();
 
-  DateTime.setTimeZone("<-03>3");
-  DateTime.setServer("time.windows.com");
-  DateTime.begin();
+  mylcd = new MyLCD();
 
-
+  server.begin();
 }
 
 void loop() {
@@ -166,70 +68,22 @@ void loop() {
   webServerLoop();
   hotEngineLoop();
   poolEngineLoop();
-  checkLcd();
+  mylcd->loop(infoChanged, currStatus);
+  infoChanged = false;
   checkButtonPressed();
-}
-
-long now() {
-  return DateTime.now();
-}
-
-void checkLcd() {
-  if (infoChanged) {
-    printInfoLcd();
-    infoChanged = false;
-  }
-  long inow = now();
-  if ((inow - lastLcdBacklight) > BACKLIGHT_TIMER) {
-    lcd.noBacklight();
-    isBacklightOn = false;
-  }
 }
 
 void checkButtonPressed() {
   if (pressed(BUTTON_PIN)) {
-    if (isBacklightOn) {
-      if (poolEngineRunning) {
+    if (mylcd->isBacklightOn) {
+      if (currStatus.poolEngineRunning) {
         stopPoolEngine();
       } else {
         startPoolEngine();
       }
     }
-    lcd.backlight();
-    lastLcdBacklight = now();
-    isBacklightOn = true;
+    mylcd->turnOn();
   }
-}
-
-void printInfoLcd() {
-  lcd.setCursor(0, 0);
-  lcd.print("     ");
-  lcd.setCursor(0, 0);
-  lcd.print(roofTemp);
-  lcd.setCursor(4, 0);
-  lcd.print(" ");
-  lcd.setCursor(4, 0);
-  lcd.print(" ");
-  lcd.setCursor(5, 0);
-  lcd.print((hotEngineRunning)   ? "On " : "Off");
-  lcd.setCursor(9, 0);
-  lcd.print((poolEngineRunning)  ? "On " : "Off");
-  lcd.setCursor(13, 0);
-  lcd.print((bordaEngineRunning) ? "On " : "Off");
-
-  lcd.setCursor(0, 1);
-  lcd.print("     ");
-  lcd.setCursor(0, 1);
-  lcd.print(poolTemp);
-  lcd.setCursor(4, 1);
-  lcd.print(" ");
-  lcd.setCursor(4, 1);
-  lcd.setCursor(5, 1);
-  lcd.print("AQU");
-  lcd.setCursor(9, 1);
-  lcd.print("FIL");
-  lcd.setCursor(13, 1);
-  lcd.print("BOR");
 }
 
 void webServerLoop() {
@@ -246,16 +100,16 @@ void webServerLoop() {
             // end of http request, send response back based on command received
             webCommand(header);
             webClient.print(buildResponsePage(
-              roofTemp,
-              poolTemp,
+              currStatus.roofTemp,
+              currStatus.poolTemp,
               myConfig->hotEngineTempDiff,
               myConfig->hotEngineSecondsToRun,
               myConfig->poolEngineStartHour,
               myConfig->poolEngineStartMinute,
               myConfig->poolEngineMinutesToRun,
-              poolEngineRunning,
-              bordaEngineRunning,
-              hotEngineRunning
+              currStatus.poolEngineRunning,
+              currStatus.bordaEngineRunning,
+              currStatus.hotEngineRunning
             ));
             break; // break while loop
           } else {
@@ -276,7 +130,7 @@ void webServerLoop() {
 /////////////////////////////////////
 void hotEngineLoop() {
   
-  long inow = now();
+  long inow = DateTime.now();
   if (inow - lastHotEngineLoop < 5) {
     // only run once each 5s
     return;
@@ -284,20 +138,20 @@ void hotEngineLoop() {
   lastHotEngineLoop = inow;
   
   if (shouldReadPoolTemp) {
-    poolTemp = readPoolTemp();
+    currStatus.poolTemp = readPoolTemp();
   } else {
-    roofTemp = readRoofTemp();
+    currStatus.roofTemp = readRoofTemp();
   }
   shouldReadPoolTemp = !shouldReadPoolTemp;
   
-  if (!hotEngineRunning) {
+  if (!currStatus.hotEngineRunning) {
 #ifdef MODE_ONLY_ROOF_TEMP
     // here, myConfig->hotEngineTempDiff = min roof temp to activate engine
-    if (roofTemp >= myConfig->hotEngineTempDiff) {
+    if (currStatus.roofTemp >= myConfig->hotEngineTempDiff) {
       startHotEngine();
     }
 #else
-    if ((roofTemp - poolTemp) > myConfig->hotEngineTempDiff) {
+    if ((currStatus.roofTemp - currStatus.poolTemp) > myConfig->hotEngineTempDiff) {
       startHotEngine();
     }
 #endif
@@ -331,7 +185,7 @@ void postTemp(String who, float result) {
   String date = DateTime.format("%Y%m%d");
   String hour = DateTime.format("%H");
   String minute = DateTime.format("%M");
-  String url = "http://167.172.14.135//cgi-bin/bli.py?who=" + who + "&running=" + String(hotEngineRunning) + "&date=" + date + "&hour=" + hour + "&minute=" + minute + "&temp=" + String(result);
+  String url = "http://167.172.14.135//cgi-bin/bli.py?who=" + who + "&running=" + String(currStatus.hotEngineRunning) + "&date=" + date + "&hour=" + hour + "&minute=" + minute + "&temp=" + String(result);
   WiFiClient client;
   HTTPClient http;
   http.begin(client, url);
@@ -349,8 +203,8 @@ int getAverageRead() {
 }
 
 float readPoolTemp() {
-  areadPool = getAverageRead();
-  float result = convertTemp(areadPool);
+  currStatus.areadPool = getAverageRead();
+  float result = convertTemp(currStatus.areadPool);
   infoChanged = true;
   //postTemp("pool", result);
   digitalWrite(SENSOR_SWITCH, LOW); // Chaveia para sensor do telhado (T1)
@@ -358,8 +212,8 @@ float readPoolTemp() {
 }
 
 float readRoofTemp() {
-  areadRoof = getAverageRead();
-  float result = convertTemp(areadRoof);
+  currStatus.areadRoof = getAverageRead();
+  float result = convertTemp(currStatus.areadRoof);
   infoChanged = true;
   //postTemp("roof", result);
   digitalWrite(SENSOR_SWITCH, HIGH); // chaveia para sensor da piscina (T2)
@@ -367,10 +221,10 @@ float readRoofTemp() {
 }
 
 void startHotEngine() {
-  hotEngineStartTime = now();
+  hotEngineStartTime = DateTime.now();
   //Serial.println("Starting hot engine...");
   digitalWrite(HOT_ENGINE_PIN, LOW);
-  hotEngineRunning = true;
+  currStatus.hotEngineRunning = true;
   infoChanged = true;
   lastHotEngineStart = hotEngineStartTime;
 }
@@ -378,12 +232,12 @@ void startHotEngine() {
 void stopHotEngine() {
   //Serial.println("Stopping hot engine...");
   digitalWrite(HOT_ENGINE_PIN, HIGH);
-  hotEngineRunning = false;
+  currStatus.hotEngineRunning = false;
   infoChanged = true;
 }
 
 bool checkStopHotEngine() {
-  long inow = now();
+  long inow = DateTime.now();
   long diff = inow - hotEngineStartTime;
   if (diff > myConfig->hotEngineSecondsToRun) {
     return true;
@@ -396,13 +250,13 @@ bool checkStopHotEngine() {
 /////////////////////////////////////
 
 void poolEngineLoop() {
-  long inow = now();
+  long inow = DateTime.now();
   if (inow - lastPoolEngineLoop < 5) {
     // only run once each 5s
     return;
   }
   lastPoolEngineLoop = inow;
-  if (!poolEngineRunning) {
+  if (!currStatus.poolEngineRunning) {
     if (checkStartPoolEngine()) {
       startPoolEngine();
       if (runBordaWithPool) {
@@ -420,17 +274,17 @@ void poolEngineLoop() {
 }
 
 void startPoolEngine() {
-  poolEngineStartTime = now();
+  poolEngineStartTime = DateTime.now();
   //Serial.println("Starting pool engine...");
   digitalWrite(POOL_ENGINE_PIN, LOW);
-  poolEngineRunning = true;
+  currStatus.poolEngineRunning = true;
   infoChanged = true;
 }
 
 void stopPoolEngine() {
   //Serial.println("Stopping pool engine...");
   digitalWrite(POOL_ENGINE_PIN, HIGH);
-  poolEngineRunning = false;
+  currStatus.poolEngineRunning = false;
   infoChanged = true;
 }
 
@@ -441,7 +295,7 @@ bool checkStartPoolEngine() {
 }
 
 bool checkStopPoolEngine() {
-  long inow = now();
+  long inow = DateTime.now();
   long diff = inow - poolEngineStartTime;
   if (diff > (myConfig->poolEngineMinutesToRun * 60L)) { 
     return true;
@@ -456,14 +310,14 @@ bool checkStopPoolEngine() {
 void startBordaEngine() {
   //Serial.println("Starting borda engine...");
   digitalWrite(BORDA_ENGINE_PIN, LOW);
-  bordaEngineRunning = true;
+  currStatus.bordaEngineRunning = true;
   infoChanged = true;
 }
 
 void stopBordaEngine() {
   //Serial.println("Stopping borda engine...");
   digitalWrite(BORDA_ENGINE_PIN, HIGH);
-  bordaEngineRunning = false;
+  currStatus.bordaEngineRunning = false;
   infoChanged = true;
 }
 
@@ -504,7 +358,7 @@ String buildResponsePage(
   
   result += "<p>" + DateTime.format("%F %T") + "</p>";
       
-  result += "<p>Telhado: " + String(roofTemperature) + " (" + String(areadRoof) + ")<br>Piscina: " + String(poolTemperature) + " (" + String(areadPool) + ")</p>";
+  result += "<p>Telhado: " + String(roofTemperature) + " (" + String(currStatus.areadRoof) + ")<br>Piscina: " + String(poolTemperature) + " (" + String(currStatus.areadPool) + ")</p>";
   
   result += "<h2><a href=\"/\">REFRESH</a></h2>";
   result += "<h3>Configuracao da bomba de aquecimento</h3>";
@@ -611,19 +465,14 @@ void webCommand(String command) {
   } else
   if (command.startsWith("GET /bordaWithPoolOn")) {
     runBordaWithPool = true;
-    if (poolEngineRunning) {
+    if (currStatus.poolEngineRunning) {
       startBordaEngine();
     }
   } else 
   if (command.startsWith("GET /bordaWithPoolOff")) {
     runBordaWithPool = false;
-    if (poolEngineRunning) {
+    if (currStatus.poolEngineRunning) {
       stopBordaEngine();
     }
   }
-}
-
-void p(String s, long l) {
-  Serial.print(s);
-  Serial.println(l);
 }

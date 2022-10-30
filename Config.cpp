@@ -1,7 +1,6 @@
 #ifndef CONFIG_C
 #define CONFIG_C
 
-
 #include "Config.h"
 
 Config::Config() {
