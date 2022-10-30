@@ -1,10 +1,11 @@
-#include <EEPROM.h>
 #include <LiquidCrystal_I2C.h>
 #include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>
 #include <ESPDateTime.h>
 #include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
+
+#include "Config.h"
 
 // Conexoes:
 // Modulo 4 reles: d7, d6, d5 e tx
@@ -37,14 +38,7 @@ LiquidCrystal_I2C lcd(0x3F,16,2);  // set the LCD address to 0x3F for a 16 chars
 // No meu caso, D1 e D2 jah foram pro saco por causa do display. Vou usar RX para um INPUT e TX para um OUTPUT.
 // Faltam 2 INPUTs e 3 OUTPUTs.
 
-struct Config {
-  byte hotEngineTempDiff;
-  byte hotEngineSecondsToRun;
-
-  byte poolEngineStartHour;
-  byte poolEngineStartMinute;
-  byte poolEngineMinutesToRun;
-} myConfig;
+struct Config myConfig;
 
 bool hotEngineRunning   = false;
 bool poolEngineRunning  = false;
@@ -76,55 +70,6 @@ bool shouldReadPoolTemp = true; // if true, pool temp is read. Otherwise, roof t
 const char* ssid = "Deco";
 const char* password = "mobile2008";
 WiFiServer server(80);
-
-bool loadConfig() {
-  EEPROM.begin(512);
-  int addr = 0;
-  myConfig.hotEngineTempDiff = EEPROM.read(addr++);
-  myConfig.hotEngineSecondsToRun = EEPROM.read(addr++);
-  myConfig.poolEngineStartHour = EEPROM.read(addr++);
-  myConfig.poolEngineStartMinute = EEPROM.read(addr++);
-  myConfig.poolEngineMinutesToRun = EEPROM.read(addr++);
-  return true;
-}
-
-void saveConfig() {
-  int addr = 0;
-  EEPROM.write(addr++, myConfig.hotEngineTempDiff);
-  EEPROM.write(addr++, myConfig.hotEngineSecondsToRun);
-  EEPROM.write(addr++, myConfig.poolEngineStartHour);
-  EEPROM.write(addr++, myConfig.poolEngineStartMinute);
-  EEPROM.write(addr++, myConfig.poolEngineMinutesToRun);
-  EEPROM.commit();
-}
-
-void saveTestConfig() {
-  
-  EEPROM.begin(512);
-
-  myConfig.hotEngineTempDiff = 10;
-  myConfig.hotEngineSecondsToRun = 10;
-  myConfig.poolEngineStartHour = 7;
-  myConfig.poolEngineStartMinute = 0;
-  myConfig.poolEngineMinutesToRun = 1;
-
-  saveConfig();
-
-  myConfig.hotEngineTempDiff = 0;
-  myConfig.hotEngineSecondsToRun = 0;
-  myConfig.poolEngineStartHour = 0;
-  myConfig.poolEngineStartMinute = 0;
-  myConfig.poolEngineMinutesToRun = 0;
-}
-
-void printConfig() {
-  p("myConfig.hotEngineTempDiff:      ", myConfig.hotEngineTempDiff);
-  p("myConfig.hotEngineSecondsToRun:  ", myConfig.hotEngineSecondsToRun);
-
-  p("myConfig.poolEngineStartHour:    ", myConfig.poolEngineStartHour);
-  p("myConfig.poolEngineStartMinute:  ", myConfig.poolEngineStartMinute);
-  p("myConfig.poolEngineMinutesToRun: ", myConfig.poolEngineMinutesToRun);
-}
 
 bool setupWiFi() {
     // Connect to WiFi network
@@ -204,8 +149,7 @@ void setupOTA() {
 void setup() {
   
   //saveTestConfig();
-  loadConfig();
-  printConfig();
+  myConfig = loadConfig();
   setupDevices();
   setupWiFi();
   setupOTA();
@@ -616,35 +560,35 @@ void webCommand(String command) {
     index += 7;
     int value = command.substring(index).toInt();
     myConfig.hotEngineTempDiff = value;
-    saveConfig();
+    saveConfig(myConfig);
   } else 
   if (command.startsWith("GET /hotEngineSecondsToRun")) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
     myConfig.hotEngineSecondsToRun = value;
-    saveConfig();
+    saveConfig(myConfig);
   } else 
   if (command.startsWith("GET /poolEngineStartHour")) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
     myConfig.poolEngineStartHour = value;
-    saveConfig();
+    saveConfig(myConfig);
   } else 
   if (command.startsWith("GET /poolEngineStartMinute")) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
     myConfig.poolEngineStartMinute = value;
-    saveConfig();
+    saveConfig(myConfig);
   } else 
   if (command.startsWith("GET /poolEngineMinutesToRun")) {
     int index = command.indexOf("?value=");
     index += 7;
     int value = command.substring(index).toInt();
     myConfig.poolEngineMinutesToRun = value;
-    saveConfig();
+    saveConfig(myConfig);
   } else
   
   if (command.startsWith("GET /poolEngineOff")) {
