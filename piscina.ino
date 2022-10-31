@@ -3,9 +3,10 @@
 
 #include "Config.h"
 #include "Setup.h"
-#include "Status.h"
 #include "MyLCD.h"
 #include "Button.h"
+#include "GenericEngine.h"
+#include "HotEngine.h"
 
 // Conexoes:
 // Modulo 4 reles: d7, d6, d5 e tx
@@ -31,9 +32,13 @@
 // Faltam 2 INPUTs e 3 OUTPUTs.
 
 Config *myConfig = new Config();
-MyLCD  *mylcd    = new MyLCD();
 Button *button   = new Button(BUTTON_PIN);
-struct Status currStatus;
+
+GenericEngine *poolEngine  = new GenericEngine(POOL_ENGINE_PIN, true);
+GenericEngine *bordaEngine = new GenericEngine(BORDA_ENGINE_PIN, false);
+HotEngine     *hotEngine   = new HotEngine(HOT_ENGINE_PIN, THERMISTOR_SWITCH_PIN);
+
+MyLCD  *mylcd = new MyLCD(poolEngine, bordaEngine, hotEngine);
 
 bool runBordaWithPool = true;
 
@@ -57,28 +62,29 @@ void setup() {
   //myConfig->saveTest();
   myConfig->load();
   setupAll();
-  mylcd = new MyLCD();
   server.begin();
   button->begin();
+  poolEngine->begin(myConfig);
+  bordaEngine->begin(myConfig);
+  hotEngine->begin(myConfig);
 }
 
 void loop() {
   ArduinoOTA.handle();
   webServerLoop();
-  hotEngineLoop();
-  poolEngineLoop();
-  mylcd->loop(infoChanged, currStatus);
-  infoChanged = false;
+  mylcd->updateScreen(poolEngine->loop());
+  mylcd->updateScreen(bordaEngine->loop());
+  mylcd->updateScreen(hotEngine->loop());
   checkButtonPressed();
 }
 
 void checkButtonPressed() {
   if (button->isPressed()) {
     if (mylcd->isBacklightOn) {
-      if (currStatus.poolEngineRunning) {
-        stopPoolEngine();
+      if (poolEngine->running) {
+        poolEngine->stop();
       } else {
-        startPoolEngine();
+        poolEngine->start();
       }
     }
     mylcd->turnOn();
@@ -98,18 +104,7 @@ void webServerLoop() {
           if (line.length() == 0) {
             // end of http request, send response back based on command received
             webCommand(header);
-            webClient.print(buildResponsePage(
-              currStatus.roofTemp,
-              currStatus.poolTemp,
-              myConfig->hotEngineTempDiff,
-              myConfig->hotEngineSecondsToRun,
-              myConfig->poolEngineStartHour,
-              myConfig->poolEngineStartMinute,
-              myConfig->poolEngineMinutesToRun,
-              currStatus.poolEngineRunning,
-              currStatus.bordaEngineRunning,
-              currStatus.hotEngineRunning
-            ));
+            webClient.print(buildResponsePage());
             break; // break while loop
           } else {
             Serial.println(line);
@@ -125,218 +120,11 @@ void webServerLoop() {
 }
 
 /////////////////////////////////////
-///// HOT ENGINE FUNCTIONS //////////
-/////////////////////////////////////
-void hotEngineLoop() {
-  
-  long inow = DateTime.now();
-  if (inow - lastHotEngineLoop < 5) {
-    // only run once each 5s
-    return;
-  }
-  lastHotEngineLoop = inow;
-  
-  if (shouldReadPoolTemp) {
-    currStatus.poolTemp = readPoolTemp();
-  } else {
-    currStatus.roofTemp = readRoofTemp();
-  }
-  shouldReadPoolTemp = !shouldReadPoolTemp;
-  
-  if (!currStatus.hotEngineRunning) {
-#ifdef MODE_ONLY_ROOF_TEMP
-    // here, myConfig->hotEngineTempDiff = min roof temp to activate engine
-    if (currStatus.roofTemp >= myConfig->hotEngineTempDiff) {
-      startHotEngine();
-    }
-#else
-    if ((currStatus.roofTemp - currStatus.poolTemp) > myConfig->hotEngineTempDiff) {
-      startHotEngine();
-    }
-#endif
-  } else {
-    if (checkStopHotEngine()) {
-      stopHotEngine();
-    }
-  }
-}
-
-const int reads[]    = {275, 403,  504,  511,  527,  539,  555,  564,  577,  600,  610,  629,  651,  686,  703,  716,  756,  779,  804,  839,  857,  872,  888,  905};
-const double temps[] = {  3,  14, 22.3,   23, 24.4, 25.1, 26.5, 27.5, 28.5, 30.5, 31.5, 32.8, 34.5, 38.5, 40.0, 41.1, 44.9, 47.6, 50.2, 55.0, 57.6, 60.0, 62.5, 64.5}; 
-
-float convertTemp(int aread) {
-  int slot = -1;
-  int reads_size = sizeof(reads);
-  for (int i = 1; i < reads_size - 1; i++) {
-    if (aread >= reads[i-1] && aread < reads[i]) {
-      slot = i - 1;
-      break;
-    }
-  }
-  if (slot == -1) return -1;
-  double tempdiff = temps[slot+1] - temps[slot];
-  int readdiff = reads[slot+1] - reads[slot];
-  double increment = tempdiff / readdiff;
-  return (increment * (aread - reads[slot]) + temps[slot]);
-}
-
-void postTemp(String who, float result) {
-  String date = DateTime.format("%Y%m%d");
-  String hour = DateTime.format("%H");
-  String minute = DateTime.format("%M");
-  String url = "http://167.172.14.135//cgi-bin/bli.py?who=" + who + "&running=" + String(currStatus.hotEngineRunning) + "&date=" + date + "&hour=" + hour + "&minute=" + minute + "&temp=" + String(result);
-  WiFiClient client;
-  HTTPClient http;
-  http.begin(client, url);
-  httpCode = http.GET();
-}
-
-int getAverageRead() {
-  int times = 10;
-  int result = 0;
-  for (int i = 0; i < times; i++) {
-    result += analogRead(A0);
-    delay(10);
-  }
-  return (result / times);
-}
-
-float readPoolTemp() {
-  currStatus.areadPool = getAverageRead();
-  float result = convertTemp(currStatus.areadPool);
-  infoChanged = true;
-  //postTemp("pool", result);
-  digitalWrite(SENSOR_SWITCH, LOW); // Chaveia para sensor do telhado (T1)
-  return result;
-}
-
-float readRoofTemp() {
-  currStatus.areadRoof = getAverageRead();
-  float result = convertTemp(currStatus.areadRoof);
-  infoChanged = true;
-  //postTemp("roof", result);
-  digitalWrite(SENSOR_SWITCH, HIGH); // chaveia para sensor da piscina (T2)
-  return result;
-}
-
-void startHotEngine() {
-  hotEngineStartTime = DateTime.now();
-  //Serial.println("Starting hot engine...");
-  digitalWrite(HOT_ENGINE_PIN, LOW);
-  currStatus.hotEngineRunning = true;
-  infoChanged = true;
-  lastHotEngineStart = hotEngineStartTime;
-}
-
-void stopHotEngine() {
-  //Serial.println("Stopping hot engine...");
-  digitalWrite(HOT_ENGINE_PIN, HIGH);
-  currStatus.hotEngineRunning = false;
-  infoChanged = true;
-}
-
-bool checkStopHotEngine() {
-  long inow = DateTime.now();
-  long diff = inow - hotEngineStartTime;
-  if (diff > myConfig->hotEngineSecondsToRun) {
-    return true;
-  }
-  return false;
-}
-
-/////////////////////////////////////
-///// POOL ENGINE FUNCTIONS /////////
-/////////////////////////////////////
-
-void poolEngineLoop() {
-  long inow = DateTime.now();
-  if (inow - lastPoolEngineLoop < 5) {
-    // only run once each 5s
-    return;
-  }
-  lastPoolEngineLoop = inow;
-  if (!currStatus.poolEngineRunning) {
-    if (checkStartPoolEngine()) {
-      startPoolEngine();
-      if (runBordaWithPool) {
-        startBordaEngine();
-      }
-    }
-  } else {
-    if (checkStopPoolEngine()) {
-      stopPoolEngine();
-      if (runBordaWithPool) {
-        stopBordaEngine();
-      }
-    }
-  }
-}
-
-void startPoolEngine() {
-  poolEngineStartTime = DateTime.now();
-  //Serial.println("Starting pool engine...");
-  digitalWrite(POOL_ENGINE_PIN, LOW);
-  currStatus.poolEngineRunning = true;
-  infoChanged = true;
-}
-
-void stopPoolEngine() {
-  //Serial.println("Stopping pool engine...");
-  digitalWrite(POOL_ENGINE_PIN, HIGH);
-  currStatus.poolEngineRunning = false;
-  infoChanged = true;
-}
-
-bool checkStartPoolEngine() {
-  bool matchHour = DateTime.format("%H").toInt() == myConfig->poolEngineStartHour;
-  bool matchMin  = DateTime.format("%M").toInt() == myConfig->poolEngineStartMinute;
-  return matchHour && matchMin;
-}
-
-bool checkStopPoolEngine() {
-  long inow = DateTime.now();
-  long diff = inow - poolEngineStartTime;
-  if (diff > (myConfig->poolEngineMinutesToRun * 60L)) { 
-    return true;
-  }
-  return false;
-}
-
-/////////////////////////////////////
-///// BORDA ENGINE FUNCTIONS ////////
-/////////////////////////////////////
-
-void startBordaEngine() {
-  //Serial.println("Starting borda engine...");
-  digitalWrite(BORDA_ENGINE_PIN, LOW);
-  currStatus.bordaEngineRunning = true;
-  infoChanged = true;
-}
-
-void stopBordaEngine() {
-  //Serial.println("Stopping borda engine...");
-  digitalWrite(BORDA_ENGINE_PIN, HIGH);
-  currStatus.bordaEngineRunning = false;
-  infoChanged = true;
-}
-
-/////////////////////////////////////
 ///// UTILS /////////////////////////
 /////////////////////////////////////
 
 
-String buildResponsePage(
-    float roofTemperature,
-    float poolTemperature,
-    byte hotEngineTempDiff,
-    byte hotEngineSecondsToRun,
-    byte poolEngineStartHour,
-    byte poolEngineStartMinute,
-    byte poolEngineMinutesToRun,
-    bool isPoolEngineOn,
-    bool isBordaEngineOn,
-    bool isHotEngineOn
-  ) {
+String buildResponsePage() {
   String result = "HTTP/1.1 200 OK\n";
   result += "Content-Type: text/html\n";
   result += "Connection: close\n\n";
@@ -346,7 +134,7 @@ String buildResponsePage(
   
   result += "<p>" + DateTime.format("%F %T") + "</p>";
       
-  result += "<p>Telhado: " + String(roofTemperature) + " (" + String(currStatus.areadRoof) + ")<br>Piscina: " + String(poolTemperature) + " (" + String(currStatus.areadPool) + ")</p>";
+  result += "<p>Telhado: " + String(hotEngine->roofTemperature) + " (" + String(hotEngine->lastRoofRead) + ")<br>Piscina: " + String(hotEngine->poolTemperature) + " (" + String(hotEngine->lastPoolRead) + ")</p>";
   
   result += "<h2><a href=\"/\">REFRESH</a></h2>";
   result += "<h3>Configuracao da bomba de aquecimento</h3>";
@@ -355,31 +143,33 @@ String buildResponsePage(
 #else 
   result += "<h4>Diff de temp para ligar bomba: <form action=\"/hotEngineTempDiff\">";
 #endif
-  result += "<input name=\"value\" value=\"" + String(hotEngineTempDiff) +"\"><input type=submit></form></h4>";
+  result += "<input name=\"value\" value=\"" + String(myConfig->hotEngineTempDiff) +"\"><input type=submit></form></h4>";
   result += "<h4>Tempo (em seg) ligada: <form action=\"/hotEngineSecondsToRun\">";
-  result += "<input name=\"value\" value=\"" + String(hotEngineSecondsToRun) +"\"><input type=submit></form></h4>";
+  result += "<input name=\"value\" value=\"" + String(myConfig->hotEngineSecondsToRun) +"\"><input type=submit></form></h4>";
   result += "<h3>Configuracao da bomba de filtragem</h3>";
   result += "<h4>Hora para ligar: <form action=\"/poolEngineStartHour\">";
-  result += "<input name=\"value\" value=\"" + String(poolEngineStartHour) +"\"><input type=submit></form></h4>";
+  result += "<input name=\"value\" value=\"" + String(myConfig->poolEngineStartHour) +"\"><input type=submit></form></h4>";
   result += "<h4>Minuto para ligar: <form action=\"/poolEngineStartMinute\">";
-  result += "<input name=\"value\" value=\"" + String(poolEngineStartMinute) +"\"><input type=submit></form></h4>";
-  result += "<h4>Tempo (em minutos) para executar: <form action=\"/poolEngineMinutesToRun\">";
-  result += "<input name=\"value\" value=\"" + String(poolEngineMinutesToRun) +"\"><input type=submit></form></h4>";
+  result += "<input name=\"value\" value=\"" + String(myConfig->poolEngineStartMinute) +"\"><input type=submit></form></h4>";
+  result += "<h4>Minutos para executar filtragem: <form action=\"/poolEngineMinutesToRun\">";
+  result += "<input name=\"value\" value=\"" + String(myConfig->poolEngineMinutesToRun) +"\"><input type=submit></form></h4>";
+  result += "<h4>Minutos para executar borda: <form action=\"/bordaEngineMinutesToRun\">";
+  result += "<input name=\"value\" value=\"" + String(myConfig->bordaEngineMinutesToRun) +"\"><input type=submit></form></h4>";
 
   result += "<h2>Ligar/Desligar bombas</h2>";
-  if (isPoolEngineOn) {
+  if (poolEngine->running) {
     result += "<a href=\"/poolEngineOff\">Desligar bomba de filtragem</a>";
   } else {
     result += "<a href=\"/poolEngineOn\">Ligar bomba de filtragem</a>";
   }
   result += "<br><br>";
-  if (isBordaEngineOn) {
+  if (bordaEngine->running) {
     result += "<a href=\"/bordaEngineOff\">Desligar bomba da borda infinita</a>";
   } else {
     result += "<a href=\"/bordaEngineOn\">Ligar bomba da borda infinita</a>";
   }
   result += "<br><br>";
-  if (isHotEngineOn) {
+  if (bordaEngine->running) {
     result += "<a href=\"/hotEngineOff\">Desligar bomba de aquecimento</a>";
   } else {
     result += "<a href=\"/hotEngineOn\">Ligar bomba de aquecimento</a>";
@@ -432,35 +222,42 @@ void webCommand(String command) {
     myConfig->poolEngineMinutesToRun = value;
     myConfig->save();
   } else
+  if (command.startsWith("GET /bordaEngineMinutesToRun")) {
+    int index = command.indexOf("?value=");
+    index += 7;
+    int value = command.substring(index).toInt();
+    myConfig->bordaEngineMinutesToRun = value;
+    myConfig->save();
+  } else
   
   if (command.startsWith("GET /poolEngineOff")) {
-    stopPoolEngine();
+    poolEngine->stop();
   } else 
   if (command.startsWith("GET /poolEngineOn")) {
-    startPoolEngine();
+    poolEngine->start();
   } else
   if (command.startsWith("GET /bordaEngineOff")) {
-    stopBordaEngine();
+    bordaEngine->stop();
   } else
   if (command.startsWith("GET /bordaEngineOn")) {
-    startBordaEngine();
+    bordaEngine->start();
   }
   if (command.startsWith("GET /hotEngineOff")) {
-    stopHotEngine();
+    hotEngine->stop();
   } else
   if (command.startsWith("GET /hotEngineOn")) {
-    startHotEngine();
+    hotEngine->start();
   } else
   if (command.startsWith("GET /bordaWithPoolOn")) {
     runBordaWithPool = true;
-    if (currStatus.poolEngineRunning) {
-      startBordaEngine();
+    if (poolEngine->running) {
+      bordaEngine->start();
     }
   } else 
   if (command.startsWith("GET /bordaWithPoolOff")) {
     runBordaWithPool = false;
-    if (currStatus.poolEngineRunning) {
-      stopBordaEngine();
+    if (poolEngine->running) {
+      bordaEngine->stop();
     }
   }
 }

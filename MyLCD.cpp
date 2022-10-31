@@ -1,22 +1,25 @@
 #include "MyLCD.h"
 
-LiquidCrystal_I2C lcd(0x3F,16,2);  // set the LCD address to 0x3F for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x3F, 16, 2); // set the LCD address to 0x3F for a 16 chars and 2 line display
 
-MyLCD::MyLCD() {
+MyLCD::MyLCD(GenericEngine *poolEngine, GenericEngine* bordaEngine, HotEngine* hotEngine) {
   lcd.init();
-  lcd.backlight();
-  this->lastLcdBacklight = DateTime.now();
-  this->isBacklightOn = true;
+  this->turnOn();
+  this->poolEngine = poolEngine;
+  this->bordaEngine = bordaEngine;
+  this->hotEngine = hotEngine;
 }
 
-void MyLCD::loop(bool infoChanged, struct Status currStatus) {
-  if (infoChanged) {
-    this->printInfo(currStatus);
-  }
-  long inow = DateTime.now();
-  if ((inow - this->lastLcdBacklight) > SECONDS_TO_KEEP_BACKLIGHT) {
-    lcd.noBacklight();
-    this->isBacklightOn = false;
+void MyLCD::updateScreen(bool shouldUpdate) {
+  if (isBacklightOn) {
+    if (shouldUpdate) {
+      this->printInfo();
+    }
+    long inow = DateTime.now();
+    if ((inow - this->lastLcdBacklight) > SECONDS_TO_KEEP_BACKLIGHT) {
+      lcd.noBacklight();
+      this->isBacklightOn = false;
+    }
   }
 }
 
@@ -26,26 +29,26 @@ void MyLCD::turnOn() {
   this->isBacklightOn = true;
 }
 
-void MyLCD::printInfo(struct Status currStatus) {
+void MyLCD::printInfo() {
   lcd.setCursor(0, 0);
   lcd.print("     ");
   lcd.setCursor(0, 0);
-  lcd.print(currStatus.roofTemp);
+  lcd.print(hotEngine->roofTemperature);
   lcd.setCursor(4, 0);
   lcd.print(" ");
   lcd.setCursor(4, 0);
   lcd.print(" ");
   lcd.setCursor(5, 0);
-  lcd.print((currStatus.hotEngineRunning)   ? "On " : "Off");
+  lcd.print((hotEngine->running)   ? "On " : "Off");
   lcd.setCursor(9, 0);
-  lcd.print((currStatus.poolEngineRunning)  ? "On " : "Off");
+  lcd.print((this->poolEngine->running)  ? "On " : "Off");
   lcd.setCursor(13, 0);
-  lcd.print((currStatus.bordaEngineRunning) ? "On " : "Off");
+  lcd.print((this->bordaEngine->running) ? "On " : "Off");
 
   lcd.setCursor(0, 1);
   lcd.print("     ");
   lcd.setCursor(0, 1);
-  lcd.print(currStatus.poolTemp);
+  lcd.print(hotEngine->poolTemperature);
   lcd.setCursor(4, 1);
   lcd.print(" ");
   lcd.setCursor(4, 1);

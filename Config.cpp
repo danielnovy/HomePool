@@ -4,7 +4,6 @@
 #include "Config.h"
 
 Config::Config() {
-  
 }
 
 void Config::load() {
@@ -15,6 +14,7 @@ void Config::load() {
   this->poolEngineStartHour = EEPROM.read(addr++);
   this->poolEngineStartMinute = EEPROM.read(addr++);
   this->poolEngineMinutesToRun = EEPROM.read(addr++);
+  this->bordaEngineMinutesToRun = EEPROM.read(addr++);
 }
 
 void Config::save() {
@@ -24,6 +24,7 @@ void Config::save() {
   EEPROM.write(addr++, this->poolEngineStartHour);
   EEPROM.write(addr++, this->poolEngineStartMinute);
   EEPROM.write(addr++, this->poolEngineMinutesToRun);
+  EEPROM.write(addr++, this->bordaEngineMinutesToRun);
   EEPROM.commit();
 }
 

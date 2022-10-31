@@ -3,22 +3,6 @@
 const char* ssid = "Deco";
 const char* password = "mobile2008";
 
-void setupDevices() {
-
-  pinMode(HOT_ENGINE_PIN,   OUTPUT); // rele 1 - Aquecedor
-  pinMode(POOL_ENGINE_PIN,  OUTPUT); // rele 2 - Bomba do Filtro
-  pinMode(BORDA_ENGINE_PIN, OUTPUT); // rele 3 - Borda Infinita
-  pinMode(SENSOR_SWITCH,    OUTPUT); // rele 4 - Switch do sensor de temperatura
-
-  pinMode(A0, INPUT); // Sensor de temperatura
-  
-  // Desliga todos os reles (sim, high eh para desligar :)
-  digitalWrite(HOT_ENGINE_PIN,   HIGH);
-  digitalWrite(POOL_ENGINE_PIN,  HIGH);
-  digitalWrite(BORDA_ENGINE_PIN, HIGH);
-  digitalWrite(SENSOR_SWITCH,    LOW); // comeca lendo temp da piscina
-}
-
 void setupWiFi() {
   // Connect to WiFi network
   Serial.println();
@@ -76,5 +60,4 @@ void setupAll() {
   setupWiFi();
   setupOTA();
   setupDateTime();
-  setupDevices();
 }
