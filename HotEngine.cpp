@@ -58,6 +58,9 @@ void HotEngine::measureRoofTemperature() {
 }
 
 bool HotEngine::checkStart() {
+  if (this->roofTemperature == 0 || this->poolTemperature == 0) {
+    return false;
+  }
   return this->roofTemperature - this->poolTemperature >= myConfig->hotEngineTempDiff;
 }
 

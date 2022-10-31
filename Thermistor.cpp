@@ -27,7 +27,7 @@ float Thermistor::computeTemperature(int aread) {
       break;
     }
   }
-  if (slot == -1) return 1;
+  if (slot == -1) return 0;
   double tempdiff = temps[slot+1] - temps[slot];
   int readdiff = reads[slot+1] - reads[slot];
   double increment = tempdiff / readdiff;

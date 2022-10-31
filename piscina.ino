@@ -42,20 +42,6 @@ MyLCD  *mylcd = new MyLCD(poolEngine, bordaEngine, hotEngine);
 
 bool runBordaWithPool = true;
 
-long hotEngineStartTime;
-long poolEngineStartTime;
-
-long lastHotEngineLoop  = 0;
-long lastHotEngineStart = 0;
-long lastPoolEngineLoop = 0;
-
-float avgRead;
-
-int httpCode = 0;
-
-bool infoChanged = true;
-bool shouldReadPoolTemp = true; // if true, pool temp is read. Otherwise, roof temp is read.
-
 WiFiServer server(80);
 
 void setup() {
@@ -169,7 +155,7 @@ String buildResponsePage() {
     result += "<a href=\"/bordaEngineOn\">Ligar bomba da borda infinita</a>";
   }
   result += "<br><br>";
-  if (bordaEngine->running) {
+  if (hotEngine->running) {
     result += "<a href=\"/hotEngineOff\">Desligar bomba de aquecimento</a>";
   } else {
     result += "<a href=\"/hotEngineOn\">Ligar bomba de aquecimento</a>";
