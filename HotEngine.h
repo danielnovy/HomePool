@@ -5,6 +5,7 @@
 #include <ESPDateTime.h>
 #include "Config.h"
 #include "Thermistor.h"
+#include "Status.h"
 
 class HotEngine {
   
@@ -12,14 +13,15 @@ class HotEngine {
     bool running;
     float roofTemperature, poolTemperature;
     int lastRoofRead, lastPoolRead;
-    HotEngine(int pinNumber, int switchPinNumber);
+    HotEngine(Status *status, Config *myConfig, int pinNumber, int switchPinNumber);
     bool loop();
-    void begin(Config *myConfig);
+    void begin();
     void start();
     void stop();
     
   private:
     Config *myConfig;
+    Status *status;
     Thermistor *thermistor;
     int pinNumber, switchPinNumber;
     long startTime;

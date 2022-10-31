@@ -8,15 +8,17 @@
 #include "Config.h"
 #include "GenericEngine.h"
 #include "HotEngine.h"
+#include "Status.h"
 
 class WebServer {
   
   public:
-    WebServer(Config*, GenericEngine*, GenericEngine*, HotEngine*);
+    WebServer(Status*, Config*, GenericEngine*, GenericEngine*, HotEngine*);
     void begin();
     void loop();
 
   private:
+    Status *status;
     Config *myConfig;
     GenericEngine *poolEngine;
     GenericEngine *bordaEngine;

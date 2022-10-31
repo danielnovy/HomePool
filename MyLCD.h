@@ -5,23 +5,20 @@
 #include <ESPDateTime.h>
 
 #include "Config.h"
-#include "GenericEngine.h"
-#include "HotEngine.h"
+#include "Status.h"
 
 #define SECONDS_TO_KEEP_BACKLIGHT 20
 
 class MyLCD {
   public:
     bool isBacklightOn;
-    MyLCD(GenericEngine* poolEngine, GenericEngine* bordaEngine, HotEngine* hotEngine);
+    MyLCD(Status *status);
     void turnOn();
-    void updateScreen(bool);
-  private:
-    GenericEngine *poolEngine;
-    GenericEngine *bordaEngine;
-    HotEngine *hotEngine;
-    long lastLcdBacklight;
+    void loop();
     void printInfo();
+  private:
+    Status *status;
+    long lastLcdBacklight;
 };
 
 #endif

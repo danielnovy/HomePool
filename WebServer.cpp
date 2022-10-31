@@ -2,7 +2,8 @@
 
 ESP8266WebServer server(80);
 
-WebServer::WebServer(Config* myConfig, GenericEngine* poolEngine, GenericEngine* bordaEngine, HotEngine* hotEngine) {
+WebServer::WebServer(Status *status, Config* myConfig, GenericEngine* poolEngine, GenericEngine* bordaEngine, HotEngine* hotEngine) {
+  this->status = status;
   this->myConfig = myConfig;
   this->poolEngine = poolEngine;
   this->bordaEngine = bordaEngine;
@@ -23,24 +24,30 @@ void WebServer::begin() {
   server.on("/poolEngine",  [&]() {
     if (this->poolEngine->running) {
       this->poolEngine->stop();
+      this->status->setPoolEngineRunning(false);
     } else {
       this->poolEngine->start();
+      this->status->setPoolEngineRunning(true);
     }
     this->sendResult();
   });
   server.on("/bordaEngine",  [&]() {
     if (this->bordaEngine->running) {
       this->bordaEngine->stop();
+      this->status->setBordaEngineRunning(false);
     } else {
       this->bordaEngine->start();
+      this->status->setBordaEngineRunning(true);
     }
     this->sendResult();
   });
   server.on("/hotEngine",  [&]() {
     if (this->hotEngine->running) {
       this->hotEngine->stop();
+      this->status->setHotEngineRunning(false);
     } else {
       this->hotEngine->start();
+      this->status->setHotEngineRunning(true);
     }
     this->sendResult();
   });

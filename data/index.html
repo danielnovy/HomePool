@@ -213,6 +213,13 @@
 </svg>
 
 
+<script type="text/javascript">
+  function request(url) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("GET", url, true);
+    xhttp.send();
+  }
+</script>
 
 
       </td><td>
@@ -224,19 +231,19 @@
 
     <table><tr><td><h3>Bomba de Filtragem</h3></td><td>
       <label class="switch">
-        <input type="checkbox" onclick="location.href='/poolEngine';" {{POOL_ENGINE}}>
+        <input type="checkbox" onclick="request('/poolEngine');" {{POOL_ENGINE}}>
       <span class="slider round"></span>
       </label>
       </td></tr>
     <tr><td><h3>Borda Infinita</h3></td><td>
       <label class="switch">
-        <input type="checkbox" onclick="location.href='/bordaEngine';" {{BORDA_ENGINE}}>
+        <input type="checkbox" onclick="request('/bordaEngine');" {{BORDA_ENGINE}}>
       <span class="slider round"></span>
       </label>
       </td></tr>
     <tr><td><h3>Bomba de Aquecimento</h3></td><td>
       <label class="switch">
-        <input type="checkbox" onclick="location.href='/hotEngine';" {{HOT_ENGINE}}>
+        <input type="checkbox" onclick="request('/hotEngine');" {{HOT_ENGINE}}>
       <span class="slider round"></span>
       </label>
       </td></tr></table>

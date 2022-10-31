@@ -1,14 +1,15 @@
 #include "HotEngine.h"
 
-HotEngine::HotEngine(int pinNumber, int switchPinNumber) {
+HotEngine::HotEngine(Status *status, Config *myConfig, int pinNumber, int switchPinNumber) {
+  this->status = status;
+  this->myConfig = myConfig;
   this->pinNumber = pinNumber;
   this->switchPinNumber = switchPinNumber;
   this->thermistor = new Thermistor(THERMISTOR_PIN);
   this->pool = false;
 }
 
-void HotEngine::begin(Config *myConfig) {
-  this->myConfig = myConfig;
+void HotEngine::begin() {
   pinMode(pinNumber,  OUTPUT);
   digitalWrite(pinNumber,  HIGH);
 
@@ -49,12 +50,14 @@ void HotEngine::measurePoolTemperature() {
   this->lastPoolRead = this->thermistor->readSensor();
   this->poolTemperature = this->thermistor->computeTemperature(this->lastPoolRead); 
   digitalWrite(switchPinNumber, LOW); // Chaveia para sensor do telhado (T1)
+  this->status->setPoolTemperature(this->poolTemperature);
 }
 
 void HotEngine::measureRoofTemperature() {
   this->lastRoofRead = this->thermistor->readSensor();
   this->roofTemperature = this->thermistor->computeTemperature(this->lastRoofRead); 
   digitalWrite(switchPinNumber, HIGH); // chaveia para sensor da piscina (T2)
+  this->status->setRoofTemperature(this->roofTemperature);
 }
 
 bool HotEngine::checkStart() {
@@ -67,7 +70,7 @@ bool HotEngine::checkStart() {
 bool HotEngine::checkStop() {
   long inow = DateTime.now();
   long diff = inow - this->startTime;
-  if (diff > myConfig->hotEngineSecondsToRun) {
+  if (diff > this->myConfig->hotEngineSecondsToRun) {
     return true;
   }
   return false;
@@ -77,9 +80,11 @@ void HotEngine::start() {
   this->startTime = DateTime.now();
   digitalWrite(pinNumber, LOW);
   this->running = true;
+  this->status->setHotEngineRunning(true);
 }
 
 void HotEngine::stop() {
   digitalWrite(pinNumber, HIGH);
   this->running = false;
+  this->status->setHotEngineRunning(false);
 }
