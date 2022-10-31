@@ -1,0 +1,120 @@
+<html>
+<header>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  input[type='number']{
+    width: 50px;
+  }
+  /* The switch - the box around the slider */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+  }
+
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+
+  input:checked + .slider {
+    background-color: #2196F3;
+  }
+
+  input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+  }
+
+  input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+  }
+
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 34px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
+  }
+</style>
+</header>
+<body>
+  <h1>Controlador da Piscina</h1>
+  <h3>
+
+    <table><tr><td><h3>Bomba de Filtragem</h3></td><td>
+      <label class="switch">
+        <input type="checkbox" onclick="location.href='/poolEngine';" {{POOL_ENGINE}}>
+      <span class="slider round"></span>
+      </label>
+      </td></tr>
+    <tr><td><h3>Borda Infinita</h3></td><td>
+      <label class="switch">
+        <input type="checkbox" onclick="location.href='/bordaEngine';" {{BORDA_ENGINE}}>
+      <span class="slider round"></span>
+      </label>
+      </td></tr>
+    <tr><td><h3>Bomba de Aquecimento</h3></td><td>
+      <label class="switch">
+        <input type="checkbox" onclick="location.href='/hotEngine';" {{HOT_ENGINE}}>
+      <span class="slider round"></span>
+      </label>
+      </td></tr></table>
+     
+  </h3>
+  <h1>Configura&ccedil;&atilde;o</h1>
+  <form action="/saveConfig">
+  <table>
+    <tr><td>In&iacute;cio de Filtragem</td><td>
+        <input type="text" value="{{POOL_ENGINE_START_HOUR}}" name="poolEngineStartHour" size="3">
+        :
+        <input type="text" value="{{POOL_ENGINE_START_MINUTE}}" name="poolhotEngineStartMinute" size="3">
+    </td></tr>
+    <tr><td>Tempo de Filtragem (em mins)</td><td>
+        <input type="text" value="{{POOL_ENGINE_MINUTES_TO_RUN}}" name="poolEngineMinutesToRun" size="5">
+    </td></tr>
+    <tr><td>Tempo de Borda Infinita (em mins)</td><td>
+        <input type="text" value="{{BORDA_ENGINE_MINUTES_TO_RUN}}" name="bordaEngineMinutesToRun" size="5">
+    </td></tr>
+    <tr><td>Diferen&ccedil;a de Temperatura</td><td>
+        <input type="text" value="{{HOT_ENGINE_TEMP_DIFF}}" name="hotEngineTempDiff" size="5">
+    </td></tr>
+    <tr><td>Tempo do Aquecimento (em segs)</td><td>
+        <input type="text" value="{{HOT_ENGINE_SECONDS_TO_RUN}}" name="hotEngineSecondsToRun" size="5">
+    </td></tr>
+    <tr><td colspan="2"><br><center><input type="submit" value="  Atualizar  "></center></td></tr>
+  </table>
+  </form>
+</body>
+</html>

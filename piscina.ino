@@ -1,5 +1,8 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
+//#include <ESP8266WiFi.h>
+//#include <ESP8266HTTPClient.h>
+#include <ESP8266WebServer.h>
+#include <uri/UriBraces.h>
+
 
 #include "Config.h"
 #include "Setup.h"
@@ -7,6 +10,7 @@
 #include "Button.h"
 #include "GenericEngine.h"
 #include "HotEngine.h"
+#include "WebServer.h"
 
 // Conexoes:
 // Modulo 4 reles: d7, d6, d5 e tx
@@ -37,27 +41,32 @@ Button *button   = new Button(BUTTON_PIN);
 GenericEngine *poolEngine  = new GenericEngine(POOL_ENGINE_PIN, true);
 GenericEngine *bordaEngine = new GenericEngine(BORDA_ENGINE_PIN, false);
 HotEngine     *hotEngine   = new HotEngine(HOT_ENGINE_PIN, THERMISTOR_SWITCH_PIN);
+WebServer     *webServer   = new WebServer(myConfig, poolEngine, bordaEngine, hotEngine);
 
 MyLCD  *mylcd = new MyLCD(poolEngine, bordaEngine, hotEngine);
 
 bool runBordaWithPool = true;
 
-WiFiServer server(80);
+//WiFiServer server(80);
+//ESP8266WebServer server(80);
 
 void setup() {
   //myConfig->saveTest();
   myConfig->load();
   setupAll();
-  server.begin();
+  //server.begin();
   button->begin();
   poolEngine->begin(myConfig);
   bordaEngine->begin(myConfig);
   hotEngine->begin(myConfig);
+  webServer->begin();
 }
 
 void loop() {
   ArduinoOTA.handle();
-  webServerLoop();
+  //webServerLoop();
+  //server.handleClient();
+  webServer->loop();
   mylcd->updateScreen(poolEngine->loop());
   mylcd->updateScreen(bordaEngine->loop());
   mylcd->updateScreen(hotEngine->loop());
@@ -77,6 +86,7 @@ void checkButtonPressed() {
   }
 }
 
+/*
 void webServerLoop() {
   WiFiClient webClient = server.available();
   if (webClient) {
@@ -104,6 +114,7 @@ void webServerLoop() {
     webClient.stop();
   }
 }
+*/
 
 /////////////////////////////////////
 ///// UTILS /////////////////////////
