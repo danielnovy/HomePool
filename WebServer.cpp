@@ -86,6 +86,8 @@ String WebServer::buildResultPage() {
   result.replace("{{BORDA_ENGINE_MINUTES_TO_RUN}}", String(this->myConfig->bordaEngineMinutesToRun));
   result.replace("{{HOT_ENGINE_TEMP_DIFF}}", String(this->myConfig->hotEngineTempDiff));
   result.replace("{{HOT_ENGINE_SECONDS_TO_RUN}}", String(this->myConfig->hotEngineSecondsToRun));
+  result.replace("{{POOL_TEMPERATURE}}", String(this->hotEngine->poolTemperature));
+  result.replace("{{ROOF_TEMPERATURE}}", String(this->hotEngine->roofTemperature));
   
   return result;
 }
