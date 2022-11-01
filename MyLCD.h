@@ -16,6 +16,7 @@ class MyLCD {
     void turnOn();
     void loop();
     void printInfo();
+    void begin();
   private:
     Status *status;
     long lastLcdBacklight;

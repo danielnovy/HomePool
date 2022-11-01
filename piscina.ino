@@ -51,11 +51,13 @@ void setup() {
   //myConfig->saveTest();
   myConfig->load();
   setupAll();
+  mylcd->begin();
   button->begin();
   poolEngine->begin();
   bordaEngine->begin();
   hotEngine->begin();
   webServer->begin();
+  
 }
 
 void loop() {
