@@ -36,3 +36,12 @@ void  Status::setPoolTemperature(float v) {
 float Status::getPoolTemperature() {
   return this->poolTemperature;
 }
+
+void Status::setPoolLightOn(bool v) {
+  this->poolLightOn = v;
+  this->infoChanged = true;
+}
+
+bool Status::isPoolLightOn() {
+  return this->poolLightOn;
+}

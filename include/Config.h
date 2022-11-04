@@ -4,12 +4,15 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
+#define THERMISTOR_PIN   A0
 #define HOT_ENGINE_PIN   D6
 #define POOL_ENGINE_PIN  D7
 #define BORDA_ENGINE_PIN D5
-#define THERMISTOR_SWITCH_PIN  1 // TX
-#define BUTTON_PIN             3 // RX
-#define THERMISTOR_PIN A0
+#define BUTTON_PIN       D0
+#define POOL_RED         D3
+#define POOL_GREEN       D9
+#define POOL_BLUE        D10
+#define THERMISTOR_SWITCH_PIN D8
 
 class Config {
   public:
@@ -19,6 +22,13 @@ class Config {
     byte poolEngineStartMinute;
     byte poolEngineMinutesToRun;
     byte bordaEngineMinutesToRun;
+    byte poolLightStartHour;
+    byte poolLightStartMinute;
+    byte poolLightMinutesToRun;
+
+    byte poolRed;
+    byte poolGreen;
+    byte poolBlue;
     
     Config();
     void load();

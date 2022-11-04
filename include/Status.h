@@ -7,6 +7,7 @@ class Status {
     bool poolEngineRunning;
     bool bordaEngineRunning;
     bool hotEngineRunning;
+    bool poolLightOn;
     float roofTemperature;
     float poolTemperature;
 
@@ -22,6 +23,8 @@ class Status {
     float getRoofTemperature();
     void  setPoolTemperature(float);
     float getPoolTemperature();
+    void setPoolLightOn(bool);
+    bool isPoolLightOn();
     
 };
 

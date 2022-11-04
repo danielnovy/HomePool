@@ -12,6 +12,7 @@
 #include "HotEngine.h"
 #include "WebServer.h"
 #include "Status.h"
+#include "PoolLight.h"
 
 // Conexoes:
 // Modulo 4 reles: d7, d6, d5 e tx
@@ -43,9 +44,9 @@ Status *status   = new Status();
 GenericEngine *poolEngine  = new GenericEngine(status, myConfig, POOL_ENGINE_PIN, true);
 GenericEngine *bordaEngine = new GenericEngine(status, myConfig, BORDA_ENGINE_PIN, false);
 HotEngine     *hotEngine   = new HotEngine(status, myConfig, HOT_ENGINE_PIN, THERMISTOR_SWITCH_PIN);
-WebServer     *webServer   = new WebServer(status, myConfig, poolEngine, bordaEngine, hotEngine);
-
-MyLCD  *mylcd = new MyLCD(status);
+PoolLight     *poolLight   = new PoolLight(status, myConfig, POOL_RED, POOL_GREEN, POOL_BLUE);
+WebServer     *webServer   = new WebServer(status, myConfig, poolEngine, bordaEngine, hotEngine, poolLight);
+MyLCD         *mylcd       = new MyLCD(status);
 
 void setup() {
   //myConfig->saveTest();
@@ -56,8 +57,8 @@ void setup() {
   poolEngine->begin();
   bordaEngine->begin();
   hotEngine->begin();
+  poolLight->begin();
   webServer->begin();
-  
 }
 
 void checkButtonPressed() {
@@ -82,5 +83,6 @@ void loop() {
   poolEngine->loop();
   bordaEngine->loop();
   hotEngine->loop();
+  poolLight->loop();
   checkButtonPressed();
 }

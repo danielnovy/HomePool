@@ -9,11 +9,12 @@
 #include "GenericEngine.h"
 #include "HotEngine.h"
 #include "Status.h"
+#include "PoolLight.h"
 
 class WebServer {
   
   public:
-    WebServer(Status*, Config*, GenericEngine*, GenericEngine*, HotEngine*);
+    WebServer(Status*, Config*, GenericEngine*, GenericEngine*, HotEngine*, PoolLight*);
     void begin();
     void loop();
 
@@ -23,6 +24,7 @@ class WebServer {
     GenericEngine *poolEngine;
     GenericEngine *bordaEngine;
     HotEngine *hotEngine;
+    PoolLight *poolLight;
     String buildResultPage();
     void sendResult();
 };
