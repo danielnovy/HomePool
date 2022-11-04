@@ -17,7 +17,9 @@ void WebServer::sendResult() {
 
 void WebServer::begin() {
 
+  Serial.println("Before LittleFS.begin() ");
   LittleFS.begin();
+  Serial.println("After LittleFS.begin() ");
   
   server.on("/", [&]() {
     this->sendResult();
@@ -76,6 +78,9 @@ void WebServer::begin() {
     this->myConfig->poolGreen = server.arg("poolGreen").toInt();
     this->myConfig->poolBlue  = server.arg("poolBlue").toInt();
     this->myConfig->save();
+    if (this->status->isPoolLightOn()) {
+      this->poolLight->turnOn(); // update colors
+    }
     this->sendResult();
   });
   server.begin();
@@ -86,6 +91,12 @@ void WebServer::loop() {
 }
 
 String WebServer::buildResultPage() {
+  if (!LittleFS.exists("/index.html")) {
+    Serial.println("Ops! File does not exist!");
+  } else {
+    Serial.println("FOUND FILE!!!");
+
+  }
   File file = LittleFS.open("/index.html", "r");
   String result = "";
   while (file.available()) {

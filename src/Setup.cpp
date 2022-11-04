@@ -57,6 +57,7 @@ void setupDateTime() {
 }
 
 void setupAll() {
+  //Serial.begin(9600);
   setupWiFi();
   setupOTA();
   setupDateTime();

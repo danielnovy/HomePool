@@ -69,7 +69,7 @@
   }
 </style>
 </header>
-<body>
+<body onload="javascript:changeRGB()">
   <h1><a href="/">Controlador da Piscina 
       <svg height="30" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 118.04 122.88"><path d="M16.08,59.26A8,8,0,0,1,0,59.26a59,59,0,0,1,97.13-45V8a8,8,0,1,1,16.08,0V33.35a8,8,0,0,1-8,8L80.82,43.62a8,8,0,1,1-1.44-15.95l8-.73A43,43,0,0,0,16.08,59.26Zm22.77,19.6a8,8,0,0,1,1.44,16l-10.08.91A42.95,42.95,0,0,0,102,63.86a8,8,0,0,1,16.08,0A59,59,0,0,1,22.3,110v4.18a8,8,0,0,1-16.08,0V89.14h0a8,8,0,0,1,7.29-8l25.31-2.3Z"/></svg>
     </a>
@@ -280,16 +280,41 @@
         :
         <input type="text" value="{{POOL_LIGHT_START_MINUTE}}" name="poolLightStartMinute" size="3">
     </td></tr>
-    <tr><td>Tempo de Luzes (em mins)</td><td>
+    <tr><td>Tempo de Luzes (em horas)</td><td>
         <input type="text" value="{{POOL_LIGHT_MINUTES_TO_RUN}}" name="poolLightMinutesToRun" size="5">
     </td></tr>
-    <tr><td>Cores da Piscina</td><td>
-        <input type="text" value="{{POOL_RED}}" name="poolRed" size="3">
-        <input type="text" value="{{POOL_GREEN}}" name="poolGreen" size="3">
-        <input type="text" value="{{POOL_BLUE}}" name="poolBlue" size="3">
+    </table>
+    <table>
+    <tr><td id="result_color">Cor da Piscina</td><td>
+      <table>
+        <tr><td>Vermelho</td><td>
+          <input type="range" id="sliderRed" value="{{POOL_RED}}" min="0" max="255" name="poolRed" oninput="javascript:changeRGB()">
+          <output id="color_red">{{POOL_RED}}</output>
+        </td></tr>
+        <tr><td>Verde</td><td>
+          <input type="range" id="sliderGreen" value="{{POOL_GREEN}}" min="0" max="255" name="poolGreen" oninput="javascript:changeRGB()">
+          <output id="color_green">{{POOL_GREEN}}</output>
+        </td></tr>
+        <tr><td>Azul</td><td>
+          <input type="range" id="sliderBlue" value="{{POOL_BLUE}}" min="0" max="255" name="poolBlue" oninput="javascript:changeRGB()">
+          <output id="color_blue">{{POOL_BLUE}}</output>
+        </td></tr>
+      </table>
     </td></tr>
     <tr><td colspan="2"><br><center><input type="submit" value="  Atualizar  "></center></td></tr>
   </table>
   </form>
+  <script>
+    function changeRGB() {
+      r = document.getElementById("sliderRed").value;
+      g = document.getElementById("sliderGreen").value;
+      b = document.getElementById("sliderBlue").value;
+      rgb = ("rgb(" + r + "," + g + "," + b + ")");
+      document.getElementById("result_color").style="background-color:" + rgb + ";";
+      document.getElementById("color_red").value = r;
+      document.getElementById("color_green").value = g;
+      document.getElementById("color_blue").value = b;
+    }
+  </script>
 </body>
 </html>

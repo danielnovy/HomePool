@@ -44,7 +44,7 @@ bool PoolLight::checkStart() {
 bool PoolLight::checkStop() {
   long inow = DateTime.now();
   long diff = inow - this->startTime;
-  if (diff > this->config->poolLightMinutesToRun) {
+  if (diff > (this->config->poolLightMinutesToRun * 60 * 60)) {
     return true;
   }
   return false;
@@ -60,8 +60,8 @@ void PoolLight::turnOn() {
 }
 
 void PoolLight::turnOff() {
-    analogWrite(rPin, 0);
-    analogWrite(gPin, 0);
-    analogWrite(bPin, 0);
+    analogWrite(rPin, 0xff);
+    analogWrite(gPin, 0xff);
+    analogWrite(bPin, 0xff);
     this->status->setPoolLightOn(false);
 }

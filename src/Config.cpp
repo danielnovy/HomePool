@@ -12,12 +12,12 @@ void Config::load() {
   this->poolEngineStartMinute = EEPROM.read(addr++);
   this->poolEngineMinutesToRun = EEPROM.read(addr++);
   this->bordaEngineMinutesToRun = EEPROM.read(addr++);
-  //this->poolLightStartHour = EEPROM.read(addr++);
-  //this->poolLightStartMinute = EEPROM.read(addr++);
-  //this->poolLightMinutesToRun = EEPROM.read(addr++);
-  //this->poolRed = EEPROM.read(addr++);
-  //this->poolGreen = EEPROM.read(addr++);
-  //this->poolBlue = EEPROM.read(addr++);
+  this->poolLightStartHour = EEPROM.read(addr++);
+  this->poolLightStartMinute = EEPROM.read(addr++);
+  this->poolLightMinutesToRun = EEPROM.read(addr++);
+  this->poolRed = EEPROM.read(addr++);
+  this->poolGreen = EEPROM.read(addr++);
+  this->poolBlue = EEPROM.read(addr++);
 }
 
 void Config::save() {
