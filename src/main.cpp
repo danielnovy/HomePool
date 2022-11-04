@@ -60,16 +60,6 @@ void setup() {
   
 }
 
-void loop() {
-  ArduinoOTA.handle();
-  webServer->loop();
-  mylcd->loop();
-  poolEngine->loop();
-  bordaEngine->loop();
-  hotEngine->loop();
-  checkButtonPressed();
-}
-
 void checkButtonPressed() {
   if (button->isPressed()) {
     if (mylcd->isBacklightOn) {
@@ -83,4 +73,14 @@ void checkButtonPressed() {
     }
     mylcd->turnOn();
   }
+}
+
+void loop() {
+  ArduinoOTA.handle();
+  webServer->loop();
+  mylcd->loop();
+  poolEngine->loop();
+  bordaEngine->loop();
+  hotEngine->loop();
+  checkButtonPressed();
 }
