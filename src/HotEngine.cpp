@@ -49,14 +49,14 @@ bool HotEngine::loop() {
 void HotEngine::measurePoolTemperature() {
   this->lastPoolRead = this->thermistor->readSensor();
   this->poolTemperature = this->thermistor->computeTemperature(this->lastPoolRead); 
-  digitalWrite(switchPinNumber, LOW); // Chaveia para sensor do telhado (T1)
+  digitalWrite(switchPinNumber, HIGH); // Chaveia para sensor do telhado (T1)
   this->status->setPoolTemperature(this->poolTemperature);
 }
 
 void HotEngine::measureRoofTemperature() {
   this->lastRoofRead = this->thermistor->readSensor();
   this->roofTemperature = this->thermistor->computeTemperature(this->lastRoofRead); 
-  digitalWrite(switchPinNumber, HIGH); // chaveia para sensor da piscina (T2)
+  digitalWrite(switchPinNumber, LOW); // chaveia para sensor da piscina (T2)
   this->status->setRoofTemperature(this->roofTemperature);
 }
 

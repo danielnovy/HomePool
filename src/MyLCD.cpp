@@ -39,11 +39,11 @@ void MyLCD::printInfo() {
   lcd.setCursor(4, 0);
   lcd.print(" ");
   lcd.setCursor(5, 0);
-  lcd.print((this->status->isHotEngineRunning())   ? "On " : "Off");
+  lcd.print((this->status->isHotEngineRunning())   ? "On  " : "Off");
   lcd.setCursor(9, 0);
-  lcd.print((this->status->isPoolEngineRunning())  ? "On " : "Off");
+  lcd.print((this->status->isPoolEngineRunning())  ? "On  " : "Off");
   lcd.setCursor(13, 0);
-  lcd.print((this->status->isBordaEngineRunning()) ? "On " : "Off");
+  lcd.print((this->status->isBordaEngineRunning()) ? "On  " : "Off");
 
   lcd.setCursor(0, 1);
   lcd.print("     ");
@@ -52,9 +52,9 @@ void MyLCD::printInfo() {
   lcd.setCursor(4, 1);
   lcd.print(" ");
   lcd.setCursor(5, 1);
-  lcd.print("AQU");
+  lcd.print("AQU ");
   lcd.setCursor(9, 1);
-  lcd.print("FIL");
+  lcd.print("FIL ");
   lcd.setCursor(13, 1);
-  lcd.print("BOR");
+  lcd.print("BOR ");
 }

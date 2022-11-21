@@ -5,7 +5,7 @@ Button::Button(int pinNumber) {
 }
 
 void Button::begin() {
-  pinMode(pinNumber, INPUT_PULLUP);
+  pinMode(pinNumber, INPUT);
 }
 
 bool Button::isPressed() {

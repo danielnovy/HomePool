@@ -44,7 +44,7 @@ Status *status   = new Status();
 GenericEngine *poolEngine  = new GenericEngine(status, myConfig, POOL_ENGINE_PIN, true);
 GenericEngine *bordaEngine = new GenericEngine(status, myConfig, BORDA_ENGINE_PIN, false);
 HotEngine     *hotEngine   = new HotEngine(status, myConfig, HOT_ENGINE_PIN, THERMISTOR_SWITCH_PIN);
-PoolLight     *poolLight   = new PoolLight(status, myConfig, POOL_RED, POOL_GREEN, POOL_BLUE);
+PoolLight     *poolLight   = new PoolLight(status, myConfig);
 WebServer     *webServer   = new WebServer(status, myConfig, poolEngine, bordaEngine, hotEngine, poolLight);
 MyLCD         *mylcd       = new MyLCD(status);
 

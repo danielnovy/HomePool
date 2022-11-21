@@ -1,18 +1,14 @@
 #include "PoolLight.h"
 
-PoolLight::PoolLight(Status *status, Config* config, int rPin, int gPin, int bPin) {
+PoolLight::PoolLight(Status *status, Config* config) {
     this->config = config;
     this->status = status;
-    this->rPin = rPin;
-    this->gPin = gPin;
-    this->bPin = bPin;
 }
 
 void PoolLight::begin() {
-    pinMode(rPin, OUTPUT);
-    pinMode(gPin, OUTPUT);
-    pinMode(bPin, OUTPUT);
-
+    pinMode(dataPin, OUTPUT);
+    pinMode(clockPin, OUTPUT);
+    FastLED.addLeds<P9813, P9813_DATA, P9813_CLOCK, RGB>(led, NUM_LEDS);
     this->turnOff();
 }
 
@@ -36,8 +32,13 @@ void PoolLight::loop() {
 }
 
 bool PoolLight::checkStart() {
-  bool matchHour = DateTime.format("%H").toInt() == this->config->poolLightStartHour;
-  bool matchMin  = DateTime.format("%M").toInt() == this->config->poolLightStartMinute;
+  int hour = DateTime.format("%H").toInt();
+  int min  = DateTime.format("%M").toInt();
+  bool matchHour = hour == this->config->poolLightStartHour;
+  bool matchMin  = min == this->config->poolLightStartMinute;
+//  if (hour == 0 && min == 0) {
+//    ESP.restart();
+//  }
   return matchHour && matchMin;
 }
 
@@ -50,18 +51,17 @@ bool PoolLight::checkStop() {
   return false;
 }
 
-
 void PoolLight::turnOn() {
-    analogWrite(rPin, config->poolRed);
-    analogWrite(gPin, config->poolGreen);
-    analogWrite(bPin, config->poolBlue);
     this->status->setPoolLightOn(true);
     this->startTime = DateTime.now();
+    //led[0] = CRGB(config->poolRed, config->poolGreen, config->poolBlue);
+    // Instalei os fios invertidos, por isso não tá RGB abaixo.
+    led[0] = CRGB(config->poolBlue, config->poolGreen, config->poolRed);
+    FastLED.show();
 }
 
 void PoolLight::turnOff() {
-    analogWrite(rPin, 0xff);
-    analogWrite(gPin, 0xff);
-    analogWrite(bPin, 0xff);
     this->status->setPoolLightOn(false);
+    led[0] = CRGB::Black;
+    FastLED.show();
 }
