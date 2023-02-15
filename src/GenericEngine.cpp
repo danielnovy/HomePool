@@ -39,7 +39,14 @@ bool GenericEngine::checkStart() {
 bool GenericEngine::checkStop() {
   long inow = DateTime.now();
   long diff = inow - this->startTime;
-  byte minutes = (pool) ? this->myConfig->poolEngineMinutesToRun : this->myConfig->bordaEngineMinutesToRun;
+  if (pool) {
+    byte hours = this->myConfig->poolEngineHoursToRun;
+    if (diff > (hours * 60L * 60L)) {
+      return true;
+    }
+    return false;
+  }
+  byte minutes = this->myConfig->bordaEngineMinutesToRun;
   if (diff > (minutes * 60L)) { 
     return true;
   }

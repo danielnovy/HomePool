@@ -1,5 +1,10 @@
 #include "HotEngine.h"
 
+float roofTemps[10];
+int roofTempsIndex = 0;
+float poolTemps[10];
+int poolTempsIndex = 0;
+
 HotEngine::HotEngine(Status *status, Config *myConfig, int pinNumber, int switchPinNumber) {
   this->status = status;
   this->myConfig = myConfig;
@@ -48,15 +53,43 @@ bool HotEngine::loop() {
 
 void HotEngine::measurePoolTemperature() {
   this->lastPoolRead = this->thermistor->readSensor();
-  this->poolTemperature = this->thermistor->computeTemperature(this->lastPoolRead); 
   digitalWrite(switchPinNumber, HIGH); // Chaveia para sensor do telhado (T1)
+
+  float temp = this->thermistor->computeTemperature(this->lastPoolRead);
+  poolTemps[poolTempsIndex++] = temp;
+  if (poolTempsIndex >= 10) poolTempsIndex = 0;
+  float sum = 0;
+  int total = 0;
+  for (int i = 0; i < 10; i++) {
+    if (poolTemps[i] > 0) {
+      sum += poolTemps[i];
+      total++;
+    }
+  }
+  if (total > 0) temp = sum / total;
+
+  this->poolTemperature = temp;
   this->status->setPoolTemperature(this->poolTemperature);
 }
 
 void HotEngine::measureRoofTemperature() {
   this->lastRoofRead = this->thermistor->readSensor();
-  this->roofTemperature = this->thermistor->computeTemperature(this->lastRoofRead); 
   digitalWrite(switchPinNumber, LOW); // chaveia para sensor da piscina (T2)
+
+  float temp = this->thermistor->computeTemperature(this->lastRoofRead);
+  roofTemps[roofTempsIndex++] = temp;
+  if (roofTempsIndex >= 10) roofTempsIndex = 0;
+  float sum = 0;
+  int total = 0;
+  for (int i = 0; i < 10; i++) {
+    if (roofTemps[i] > 0) {
+      sum += roofTemps[i];
+      total++;
+    }
+  }
+  if (total > 0) temp = sum / total;
+
+  this->roofTemperature = temp;
   this->status->setRoofTemperature(this->roofTemperature);
 }
 

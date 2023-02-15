@@ -25,6 +25,7 @@ class WebServer {
     GenericEngine *bordaEngine;
     HotEngine *hotEngine;
     PoolLight *poolLight;
+    String lastBoot;
     String buildResultPage();
     void sendResult();
 };

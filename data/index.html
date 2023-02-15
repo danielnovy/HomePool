@@ -70,9 +70,8 @@
 </style>
 </header>
 <body onload="javascript:changeRGB()">
-  <h1><a href="/">Controlador da Piscina 
-    </a>
-  </h1>
+  <h1><a href="/">Controlador da Piscina </a> </h1>
+  <h5>Last boot: {{LAST_BOOT}}</h5>
   <table><tr><td>
 
 
@@ -246,6 +245,12 @@
       <span class="slider round"></span>
       </label>
       </td></tr>
+    <tr><td><h3>Luzes em Algoritmo</h3></td><td>
+      <label class="switch">
+        <input type="checkbox" onclick="request('/poolAlgo');" {{POOL_ALGO}}>
+      <span class="slider round"></span>
+      </label>
+      </td></tr>
     <tr><td><h3>Luzes da Piscina</h3></td><td>
       <label class="switch">
         <input type="checkbox" onclick="request('/poolLight');" {{POOL_LIGHT}}>
@@ -262,8 +267,8 @@
         :
         <input type="text" value="{{POOL_ENGINE_START_MINUTE}}" name="poolEngineStartMinute" size="3">
     </td></tr>
-    <tr><td>Tempo de Filtragem (em mins)</td><td>
-        <input type="text" value="{{POOL_ENGINE_MINUTES_TO_RUN}}" name="poolEngineMinutesToRun" size="5">
+    <tr><td>Tempo de Filtragem (em horas)</td><td>
+        <input type="text" value="{{POOL_ENGINE_HOURS_TO_RUN}}" name="poolEngineHoursToRun" size="5">
     </td></tr>
     <tr><td>Tempo de Borda Infinita (em mins)</td><td>
         <input type="text" value="{{BORDA_ENGINE_MINUTES_TO_RUN}}" name="bordaEngineMinutesToRun" size="5">

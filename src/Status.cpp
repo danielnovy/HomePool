@@ -45,3 +45,11 @@ void Status::setPoolLightOn(bool v) {
 bool Status::isPoolLightOn() {
   return this->poolLightOn;
 }
+
+void Status::setPoolAlgoOn(bool v) {
+  this->poolAlgoOn = v;
+}
+
+bool Status::isPoolAlgoOn() {
+  return this->poolAlgoOn;
+}

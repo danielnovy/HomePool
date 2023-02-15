@@ -28,7 +28,7 @@ class Config {
     byte hotEngineSecondsToRun;
     byte poolEngineStartHour;
     byte poolEngineStartMinute;
-    byte poolEngineMinutesToRun;
+    byte poolEngineHoursToRun;
     byte bordaEngineMinutesToRun;
     byte poolLightStartHour;
     byte poolLightStartMinute;

@@ -16,6 +16,8 @@ void WebServer::sendResult() {
 }
 
 void WebServer::begin() {
+  
+  this->lastBoot = DateTime.toString();
 
   Serial.println("Before LittleFS.begin() ");
   LittleFS.begin();
@@ -64,12 +66,21 @@ void WebServer::begin() {
     }
     this->sendResult();
   });
+  server.on("/poolAlgo",  [&]() {
+    if (this->status->isPoolAlgoOn()) {
+      this->poolLight->turnAlgoOff();
+    } else {
+      this->poolLight->turnAlgoOn();
+      this->status->setPoolLightOn(false);
+    }
+    this->sendResult();
+  });
   server.on("/saveConfig", [&]() {
     this->myConfig->hotEngineTempDiff       = server.arg("hotEngineTempDiff").toInt();
     this->myConfig->hotEngineSecondsToRun   = server.arg("hotEngineSecondsToRun").toInt();
     this->myConfig->poolEngineStartHour     = server.arg("poolEngineStartHour").toInt();
     this->myConfig->poolEngineStartMinute   = server.arg("poolEngineStartMinute").toInt();
-    this->myConfig->poolEngineMinutesToRun  = server.arg("poolEngineMinutesToRun").toInt();
+    this->myConfig->poolEngineHoursToRun    = server.arg("poolEngineHoursToRun").toInt();
     this->myConfig->bordaEngineMinutesToRun = server.arg("bordaEngineMinutesToRun").toInt();
     this->myConfig->poolLightStartHour      = server.arg("poolLightStartHour").toInt();
     this->myConfig->poolLightStartMinute    = server.arg("poolLightStartMinute").toInt();
@@ -118,10 +129,14 @@ String WebServer::buildResultPage() {
   if (this->status->isPoolLightOn()) {
     result.replace("{{POOL_LIGHT}}", "checked");
   }
+
+  if (this->status->isPoolAlgoOn()) {
+    result.replace("{{POOL_ALGO}}", "checked");
+  }
   
   result.replace("{{POOL_ENGINE_START_HOUR}}",      String(this->myConfig->poolEngineStartHour));
   result.replace("{{POOL_ENGINE_START_MINUTE}}",    String(this->myConfig->poolEngineStartMinute));
-  result.replace("{{POOL_ENGINE_MINUTES_TO_RUN}}",  String(this->myConfig->poolEngineMinutesToRun));
+  result.replace("{{POOL_ENGINE_HOURS_TO_RUN}}",    String(this->myConfig->poolEngineHoursToRun));
   result.replace("{{BORDA_ENGINE_MINUTES_TO_RUN}}", String(this->myConfig->bordaEngineMinutesToRun));
   result.replace("{{HOT_ENGINE_TEMP_DIFF}}",        String(this->myConfig->hotEngineTempDiff));
   result.replace("{{POOL_LIGHT_START_HOUR}}",       String(this->myConfig->poolLightStartHour));
@@ -134,5 +149,7 @@ String WebServer::buildResultPage() {
   result.replace("{{POOL_TEMPERATURE}}",            String(this->hotEngine->poolTemperature));
   result.replace("{{ROOF_TEMPERATURE}}",            String(this->hotEngine->roofTemperature));
   
+  result.replace("{{LAST_BOOT}}", this->lastBoot);
+
   return result;
 }

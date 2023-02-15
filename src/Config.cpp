@@ -10,7 +10,7 @@ void Config::load() {
   this->hotEngineSecondsToRun = EEPROM.read(addr++);
   this->poolEngineStartHour = EEPROM.read(addr++);
   this->poolEngineStartMinute = EEPROM.read(addr++);
-  this->poolEngineMinutesToRun = EEPROM.read(addr++);
+  this->poolEngineHoursToRun = EEPROM.read(addr++);
   this->bordaEngineMinutesToRun = EEPROM.read(addr++);
   this->poolLightStartHour = EEPROM.read(addr++);
   this->poolLightStartMinute = EEPROM.read(addr++);
@@ -26,7 +26,7 @@ void Config::save() {
   EEPROM.write(addr++, this->hotEngineSecondsToRun);
   EEPROM.write(addr++, this->poolEngineStartHour);
   EEPROM.write(addr++, this->poolEngineStartMinute);
-  EEPROM.write(addr++, this->poolEngineMinutesToRun);
+  EEPROM.write(addr++, this->poolEngineHoursToRun);
   EEPROM.write(addr++, this->bordaEngineMinutesToRun);
   EEPROM.write(addr++, this->poolLightStartHour);
   EEPROM.write(addr++, this->poolLightStartMinute);
