@@ -2,6 +2,8 @@
 
 ESP8266WebServer server(80);
 
+String pageString = "";
+
 WebServer::WebServer(Status *status, Config* myConfig, GenericEngine* poolEngine, GenericEngine* bordaEngine, HotEngine* hotEngine, PoolLight *poolLight) {
   this->status = status;
   this->myConfig = myConfig;
@@ -102,54 +104,51 @@ void WebServer::loop() {
 }
 
 String WebServer::buildResultPage() {
-  if (!LittleFS.exists("/index.html")) {
-    Serial.println("Ops! File does not exist!");
-  } else {
-    Serial.println("FOUND FILE!!!");
+  if (pageString.length() == 0) {
+    File file = LittleFS.open("/index.html", "r");
+    while (file.available()) {
+      pageString += char(file.read());
+    }
+  }
 
-  }
-  File file = LittleFS.open("/index.html", "r");
-  String result = "";
-  while (file.available()) {
-    result += char(file.read());
-  }
+  String result = pageString;
 
   if (this->poolEngine->running) {
-    result.replace("{{POOL_ENGINE}}", "checked");
+    result.replace("{{1}}", "checked");
   }
 
   if (this->bordaEngine->running) {
-    result.replace("{{BORDA_ENGINE}}", "checked");
+    result.replace("{{2}}", "checked");
   }
   
   if (this->hotEngine->running) {
-    result.replace("{{HOT_ENGINE}}", "checked");
+    result.replace("{{3}}", "checked");
   }
 
   if (this->status->isPoolLightOn()) {
-    result.replace("{{POOL_LIGHT}}", "checked");
+    result.replace("{{4}}", "checked");
   }
 
   if (this->status->isPoolAlgoOn()) {
-    result.replace("{{POOL_ALGO}}", "checked");
+    result.replace("{{5}}", "checked");
   }
   
-  result.replace("{{POOL_ENGINE_START_HOUR}}",      String(this->myConfig->poolEngineStartHour));
-  result.replace("{{POOL_ENGINE_START_MINUTE}}",    String(this->myConfig->poolEngineStartMinute));
-  result.replace("{{POOL_ENGINE_HOURS_TO_RUN}}",    String(this->myConfig->poolEngineHoursToRun));
-  result.replace("{{BORDA_ENGINE_MINUTES_TO_RUN}}", String(this->myConfig->bordaEngineMinutesToRun));
-  result.replace("{{HOT_ENGINE_TEMP_DIFF}}",        String(this->myConfig->hotEngineTempDiff));
-  result.replace("{{POOL_LIGHT_START_HOUR}}",       String(this->myConfig->poolLightStartHour));
-  result.replace("{{POOL_LIGHT_START_MINUTE}}",     String(this->myConfig->poolLightStartMinute));
-  result.replace("{{POOL_LIGHT_MINUTES_TO_RUN}}",   String(this->myConfig->poolLightMinutesToRun));
-  result.replace("{{POOL_RED}}",                    String(this->myConfig->poolRed));
-  result.replace("{{POOL_GREEN}}",                  String(this->myConfig->poolGreen));
-  result.replace("{{POOL_BLUE}}",                   String(this->myConfig->poolBlue));
-  result.replace("{{HOT_ENGINE_SECONDS_TO_RUN}}",   String(this->myConfig->hotEngineSecondsToRun));
-  result.replace("{{POOL_TEMPERATURE}}",            String(this->hotEngine->poolTemperature));
-  result.replace("{{ROOF_TEMPERATURE}}",            String(this->hotEngine->roofTemperature));
+  result.replace("{{6}}",      String(this->myConfig->poolEngineStartHour));
+  result.replace("{{7}}",    String(this->myConfig->poolEngineStartMinute));
+  result.replace("{{8}}",    String(this->myConfig->poolEngineHoursToRun));
+  result.replace("{{9}}", String(this->myConfig->bordaEngineMinutesToRun));
+  result.replace("{{10}}",        String(this->myConfig->hotEngineTempDiff));
+  result.replace("{{11}}",       String(this->myConfig->poolLightStartHour));
+  result.replace("{{12}}",     String(this->myConfig->poolLightStartMinute));
+  result.replace("{{13}}",   String(this->myConfig->poolLightMinutesToRun));
+  result.replace("{{14}}",                    String(this->myConfig->poolRed));
+  result.replace("{{15}}",                  String(this->myConfig->poolGreen));
+  result.replace("{{16}}",                   String(this->myConfig->poolBlue));
+  result.replace("{{17}}",   String(this->myConfig->hotEngineSecondsToRun));
+  result.replace("{{18}}",            String(this->hotEngine->poolTemperature));
+  result.replace("{{19}}",            String(this->hotEngine->roofTemperature));
   
-  result.replace("{{LAST_BOOT}}", this->lastBoot);
+  result.replace("{{20}}", this->lastBoot);
 
   return result;
 }

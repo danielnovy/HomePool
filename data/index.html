@@ -71,7 +71,7 @@
 </header>
 <body onload="javascript:changeRGB()">
   <h1><a href="/">Controlador da Piscina </a> </h1>
-  <h5>Last boot: {{LAST_BOOT}}</h5>
+  <h5>Last boot: {{20}}</h5>
   <table><tr><td>
 
 
@@ -222,38 +222,38 @@
 
       </td><td>
         <br>
-        <h3>Piscina: {{POOL_TEMPERATURE}}&deg;C</h3>
-        <h3>Telhado: {{ROOF_TEMPERATURE}}&deg;C</h3>
+        <h3>Piscina: {{18}}&deg;C</h3>
+        <h3>Telhado: {{19}}&deg;C</h3>
       </td></tr>
   </table>
 
     <table><tr><td><h3>Bomba de Filtragem</h3></td><td>
       <label class="switch">
-        <input type="checkbox" onclick="request('/poolEngine');" {{POOL_ENGINE}}>
+        <input type="checkbox" onclick="request('/poolEngine');" {{1}}>
       <span class="slider round"></span>
       </label>
       </td></tr>
     <tr><td><h3>Borda Infinita</h3></td><td>
       <label class="switch">
-        <input type="checkbox" onclick="request('/bordaEngine');" {{BORDA_ENGINE}}>
+        <input type="checkbox" onclick="request('/bordaEngine');" {{2}}>
       <span class="slider round"></span>
       </label>
       </td></tr>
     <tr><td><h3>Bomba de Aquecimento</h3></td><td>
       <label class="switch">
-        <input type="checkbox" onclick="request('/hotEngine');" {{HOT_ENGINE}}>
+        <input type="checkbox" onclick="request('/hotEngine');" {{3}}>
       <span class="slider round"></span>
       </label>
       </td></tr>
     <tr><td><h3>Luzes em Algoritmo</h3></td><td>
       <label class="switch">
-        <input type="checkbox" onclick="request('/poolAlgo');" {{POOL_ALGO}}>
+        <input type="checkbox" onclick="request('/poolAlgo');" {{5}}>
       <span class="slider round"></span>
       </label>
       </td></tr>
     <tr><td><h3>Luzes da Piscina</h3></td><td>
       <label class="switch">
-        <input type="checkbox" onclick="request('/poolLight');" {{POOL_LIGHT}}>
+        <input type="checkbox" onclick="request('/poolLight');" {{4}}>
       <span class="slider round"></span>
       </label>
       </td></tr>
@@ -263,45 +263,45 @@
   <form action="/saveConfig" id="formm">
   <table>
     <tr><td>In&iacute;cio de Filtragem</td><td>
-        <input type="text" value="{{POOL_ENGINE_START_HOUR}}" name="poolEngineStartHour" size="3">
+        <input type="text" value="{{6}}" name="poolEngineStartHour" size="3">
         :
-        <input type="text" value="{{POOL_ENGINE_START_MINUTE}}" name="poolEngineStartMinute" size="3">
+        <input type="text" value="{{7}}" name="poolEngineStartMinute" size="3">
     </td></tr>
     <tr><td>Tempo de Filtragem (em horas)</td><td>
-        <input type="text" value="{{POOL_ENGINE_HOURS_TO_RUN}}" name="poolEngineHoursToRun" size="5">
+        <input type="text" value="{{8}}" name="poolEngineHoursToRun" size="5">
     </td></tr>
     <tr><td>Tempo de Borda Infinita (em mins)</td><td>
-        <input type="text" value="{{BORDA_ENGINE_MINUTES_TO_RUN}}" name="bordaEngineMinutesToRun" size="5">
+        <input type="text" value="{{9}}" name="bordaEngineMinutesToRun" size="5">
     </td></tr>
     <tr><td>Diferen&ccedil;a de Temperatura</td><td>
-        <input type="text" value="{{HOT_ENGINE_TEMP_DIFF}}" name="hotEngineTempDiff" size="5">
+        <input type="text" value="{{10}}" name="hotEngineTempDiff" size="5">
     </td></tr>
     <tr><td>Tempo do Aquecimento (em segs)</td><td>
-        <input type="text" value="{{HOT_ENGINE_SECONDS_TO_RUN}}" name="hotEngineSecondsToRun" size="5">
+        <input type="text" value="{{17}}" name="hotEngineSecondsToRun" size="5">
     </td></tr>
     <tr><td>Luzes da Piscina</td><td>
-        <input type="text" value="{{POOL_LIGHT_START_HOUR}}" name="poolLightStartHour" size="3">
+        <input type="text" value="{{11}}" name="poolLightStartHour" size="3">
         :
-        <input type="text" value="{{POOL_LIGHT_START_MINUTE}}" name="poolLightStartMinute" size="3">
+        <input type="text" value="{{12}}" name="poolLightStartMinute" size="3">
     </td></tr>
     <tr><td>Tempo de Luzes (em horas)</td><td>
-        <input type="text" value="{{POOL_LIGHT_MINUTES_TO_RUN}}" name="poolLightMinutesToRun" size="5">
+        <input type="text" value="{{13}}" name="poolLightMinutesToRun" size="5">
     </td></tr>
     </table>
     <table>
     <tr><td id="result_color">Cor da Piscina</td><td>
       <table>
         <tr><td>Vermelho</td><td>
-          <input type="range" id="sliderRed" value="{{POOL_RED}}" min="0" max="255" name="poolRed" oninput="javascript:changeRGB()">
-          <output id="color_red">{{POOL_RED}}</output>
+          <input type="range" id="sliderRed" value="{{14}}" min="0" max="255" name="poolRed" oninput="javascript:changeRGB()">
+          <output id="color_red">{{14}}</output>
         </td></tr>
         <tr><td>Verde</td><td>
-          <input type="range" id="sliderGreen" value="{{POOL_GREEN}}" min="0" max="255" name="poolGreen" oninput="javascript:changeRGB()">
-          <output id="color_green">{{POOL_GREEN}}</output>
+          <input type="range" id="sliderGreen" value="{{15}}" min="0" max="255" name="poolGreen" oninput="javascript:changeRGB()">
+          <output id="color_green">{{15}}</output>
         </td></tr>
         <tr><td>Azul</td><td>
-          <input type="range" id="sliderBlue" value="{{POOL_BLUE}}" min="0" max="255" name="poolBlue" oninput="javascript:changeRGB()">
-          <output id="color_blue">{{POOL_BLUE}}</output>
+          <input type="range" id="sliderBlue" value="{{16}}" min="0" max="255" name="poolBlue" oninput="javascript:changeRGB()">
+          <output id="color_blue">{{16}}</output>
         </td></tr>
       </table>
     </td></tr>
@@ -320,5 +320,14 @@
       document.getElementById("color_blue").value = b;
     }
   </script>
+
+  <p>roofTemps: 
+    {{ROOF_0}} {{ROOF_1}} {{ROOF_2}} {{ROOF_3}} {{ROOF_4}} 
+    {{ROOF_5}} {{ROOF_6}} {{ROOF_7}} {{ROOF_8}} {{ROOF_9}} 
+    </p>
+  <p>poolTemps: 
+    {{POOL_0}} {{POOL_1}} {{POOL_2}} {{POOL_3}} {{POOL_4}} 
+    {{POOL_5}} {{POOL_6}} {{POOL_7}} {{POOL_8}} {{POOL_9}} 
+    </p>
 </body>
 </html>
