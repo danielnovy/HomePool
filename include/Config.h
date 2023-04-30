@@ -5,8 +5,8 @@
 #include <EEPROM.h>
 
 #define THERMISTOR_PIN        A0
-#define POOL_ENGINE_PIN       D7
-#define HOT_ENGINE_PIN        D5
+#define POOL_ENGINE_PIN       D5
+#define HOT_ENGINE_PIN        D7
 #define BORDA_ENGINE_PIN      D6
 #define THERMISTOR_SWITCH_PIN D8
 #define BUTTON_PIN            D0

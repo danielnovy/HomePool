@@ -20,6 +20,7 @@
 // Button: rx, gnd
 // Thermistor: a0 e gnd
 // Resistor 10k: 3.3v -> a0
+// 
 
 
 // PLACA WeMos D1 R1 ESP8266

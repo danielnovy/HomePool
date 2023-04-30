@@ -1,6 +1,6 @@
 #include "HotEngine.h"
 
-float roofTemps[10];
+float roofTemps[3];
 int roofTempsIndex = 0;
 float poolTemps[10];
 int poolTempsIndex = 0;
@@ -16,7 +16,7 @@ HotEngine::HotEngine(Status *status, Config *myConfig, int pinNumber, int switch
 
 void HotEngine::begin() {
   pinMode(pinNumber,  OUTPUT);
-  digitalWrite(pinNumber,  HIGH);
+  digitalWrite(pinNumber,  LOW);
 
   pinMode(switchPinNumber, OUTPUT);
   digitalWrite(switchPinNumber, LOW); // Comeca lendo sensor do telhado
@@ -78,10 +78,10 @@ void HotEngine::measureRoofTemperature() {
 
   float temp = this->thermistor->computeTemperature(this->lastRoofRead);
   roofTemps[roofTempsIndex++] = temp;
-  if (roofTempsIndex >= 10) roofTempsIndex = 0;
+  if (roofTempsIndex >= 3) roofTempsIndex = 0;
   float sum = 0;
   int total = 0;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 3; i++) {
     if (roofTemps[i] > 0) {
       sum += roofTemps[i];
       total++;
@@ -103,7 +103,7 @@ bool HotEngine::checkStart() {
 bool HotEngine::checkStop() {
   long inow = DateTime.now();
   long diff = inow - this->startTime;
-  if (diff > this->myConfig->hotEngineSecondsToRun) {
+  if (diff > this->myConfig->hotEngineSecondsToRun * 60) { // MINUTES!!!!!
     return true;
   }
   return false;
@@ -111,13 +111,13 @@ bool HotEngine::checkStop() {
 
 void HotEngine::start() {
   this->startTime = DateTime.now();
-  digitalWrite(pinNumber, LOW);
+  digitalWrite(pinNumber, HIGH);
   this->running = true;
   this->status->setHotEngineRunning(true);
 }
 
 void HotEngine::stop() {
-  digitalWrite(pinNumber, HIGH);
+  digitalWrite(pinNumber, LOW);
   this->running = false;
   this->status->setHotEngineRunning(false);
 }

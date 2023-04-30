@@ -9,7 +9,7 @@ GenericEngine::GenericEngine(Status *status, Config *myConfig, int pinNumber, bo
 
 void GenericEngine::begin() {
   pinMode(pinNumber,  OUTPUT);
-  digitalWrite(pinNumber,  HIGH);
+  digitalWrite(pinNumber,  LOW);
 }
 
 void GenericEngine::loop() {
@@ -55,14 +55,14 @@ bool GenericEngine::checkStop() {
 
 void GenericEngine::start() {
   this->startTime = DateTime.now();
-  digitalWrite(pinNumber, LOW);
+  digitalWrite(pinNumber, HIGH);
   this->running = true;
   if (pool) this->status->setPoolEngineRunning(true);
   else this->status->setBordaEngineRunning(true);
 }
 
 void GenericEngine::stop() {
-  digitalWrite(pinNumber, HIGH);
+  digitalWrite(pinNumber, LOW);
   this->running = false;
   if (pool) this->status->setPoolEngineRunning(false);
   else this->status->setBordaEngineRunning(false);
